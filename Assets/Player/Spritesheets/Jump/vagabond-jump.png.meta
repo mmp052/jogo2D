@@ -210,7 +210,10 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      vagabond-jump_0: 1944672383531049081
+      vagabond-jump_1: 1682272034039888324
+      vagabond-jump_2: -2085473446527308500
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

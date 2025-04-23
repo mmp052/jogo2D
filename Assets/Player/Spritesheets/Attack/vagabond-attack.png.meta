@@ -93,7 +93,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 64
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -510,7 +510,22 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      vagabond-attack_0: 83105586391599957
+      vagabond-attack_1: -8414250833976767034
+      vagabond-attack_10: -3282127980081022430
+      vagabond-attack_11: 5321813128879728421
+      vagabond-attack_12: -5762540112857062611
+      vagabond-attack_13: 5156407697007379460
+      vagabond-attack_14: -1414418345424001677
+      vagabond-attack_2: 9129951476047541047
+      vagabond-attack_3: 3671907363264363980
+      vagabond-attack_4: -2830205335458655371
+      vagabond-attack_5: -7556148267681941080
+      vagabond-attack_6: 1186056035012696702
+      vagabond-attack_7: 959176132077364959
+      vagabond-attack_8: 159951445402476069
+      vagabond-attack_9: 4507339493888588682
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

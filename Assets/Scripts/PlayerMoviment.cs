@@ -8,6 +8,9 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 movement;
     public KeyCode attackKey = KeyCode.Space; // Tecla de ataque
     private bool isDead = false;
+    private int comboStep = 0;
+    private float lastClickTime = 0f;
+    private float comboMaxDelay = 0.8f; // tempo pra apertar o próximo ataque
 
 
     void Start()
@@ -21,31 +24,22 @@ public class PlayerMovement : MonoBehaviour
         if (isDead) return;
 
         // ataque
-        if (!IsAttacking() && Input.GetKeyDown(attackKey))
+        if (Input.GetKeyDown(attackKey))
         {
-            animator.SetTrigger("Bite");
+            HandleCombo();
         }
 
-        if(!IsAttacking())
-        {
-            movement.x = Input.GetAxisRaw("Horizontal");
-            // movement.y = Input.GetAxisRaw("Vertical");
+        movement.x = Input.GetAxisRaw("Horizontal");
+        // movement.y = Input.GetAxisRaw("Vertical");
 
-            if (movement.x > 0)
-                transform.localScale = new Vector3(1, 1, 1); // olhando pra direita
-            else if (movement.x < 0)
-                transform.localScale = new Vector3(-1, 1, 1); // olhando pra esquerda
+        if (movement.x > 0)
+            transform.localScale = new Vector3(1, 1, 1); // olhando pra direita
+        else if (movement.x < 0)
+            transform.localScale = new Vector3(-1, 1, 1); // olhando pra esquerda
 
-            animator.SetFloat("Horizontal", movement.x);
-            // animator.SetFloat("Vertical", movement.y);
-            animator.SetFloat("Speed", movement.sqrMagnitude);
-        }
-        else
-        {
-            // se estiver atacando, não se mover
-            movement.x = 0;
-            movement.y = 0;
-        }
+        animator.SetFloat("Horizontal", movement.x);
+        // animator.SetFloat("Vertical", movement.y);
+        animator.SetFloat("Speed", movement.sqrMagnitude);
         
     }
 
@@ -62,9 +56,30 @@ public class PlayerMovement : MonoBehaviour
         // opcional: GetComponent<Collider2D>().enabled = false;
     }
 
-    bool IsAttacking()
+    void HandleCombo()
     {
-        return animator.GetCurrentAnimatorStateInfo(0).IsName("Bite");
+        float timeSinceLastClick = Time.time - lastClickTime;
+        lastClickTime = Time.time;
+
+        if (timeSinceLastClick > comboMaxDelay)
+        {
+            comboStep = 0;
+        }
+
+        comboStep++;
+
+        if (comboStep > 3)
+        {
+            comboStep = 0;
+        }
+
+        animator.SetInteger("ComboStep", comboStep);
+        animator.SetTrigger("Attack");
+    }
+    
+    public void ResetCombo()
+    {
+        comboStep = 0;
     }
 
 }

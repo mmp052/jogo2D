@@ -335,7 +335,15 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      vagabond-run_0: 8637940635518933619
+      vagabond-run_1: 5473144536629141251
+      vagabond-run_2: 2495649782832813267
+      vagabond-run_3: -5000440116669598451
+      vagabond-run_4: -3211974335238880317
+      vagabond-run_5: 1640119617134833013
+      vagabond-run_6: 3202805624670087203
+      vagabond-run_7: 1902185652743757740
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

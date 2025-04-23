@@ -535,7 +535,23 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      vagabond-jump-attack_0: -1303983316182700769
+      vagabond-jump-attack_1: -2329852673262466842
+      vagabond-jump-attack_10: 3336181143753858334
+      vagabond-jump-attack_11: 3715247014357992731
+      vagabond-jump-attack_12: 5999348720139084358
+      vagabond-jump-attack_13: 6184530638637670256
+      vagabond-jump-attack_14: 4618047683064023682
+      vagabond-jump-attack_15: 5760938200808373599
+      vagabond-jump-attack_2: -3281604203171869280
+      vagabond-jump-attack_3: -6658109782057867550
+      vagabond-jump-attack_4: -1044396887194250887
+      vagabond-jump-attack_5: -1758472705078673417
+      vagabond-jump-attack_6: -2644818171517633098
+      vagabond-jump-attack_7: -945991346935688959
+      vagabond-jump-attack_8: 2644782797121332790
+      vagabond-jump-attack_9: 6943267996719068578
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

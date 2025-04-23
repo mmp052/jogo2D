@@ -185,7 +185,9 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      vagabond-block_0: 7542542893754596356
+      vagabond-block_1: 8024787009902872005
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

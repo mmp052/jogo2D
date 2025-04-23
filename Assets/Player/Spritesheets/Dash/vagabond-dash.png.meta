@@ -235,7 +235,11 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      vagabond-dash_0: -1946108190127592148
+      vagabond-dash_1: 8537971298771906036
+      vagabond-dash_2: 1715209585598907328
+      vagabond-dash_3: 3566223171702160088
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

@@ -310,7 +310,14 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      vagabond-death_0: -9037642108727401233
+      vagabond-death_1: -699397095539210973
+      vagabond-death_2: 3732085068323606392
+      vagabond-death_3: 4947022129534105129
+      vagabond-death_4: 4611294798407522036
+      vagabond-death_5: 82566512859353552
+      vagabond-death_6: 1989185397270192616
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
