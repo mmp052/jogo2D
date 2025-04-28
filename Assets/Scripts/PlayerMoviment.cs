@@ -1,17 +1,28 @@
 using UnityEngine;
+using System.Collections;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public float moveSpeed = 5f;
+    public float moveSpeed = 2f;
+    public float jumpForce = 5f;
+    public Transform groundCheck;
+    public float groundCheckRadius = 0.05f;
+    public LayerMask groundLayer;
+
     private Rigidbody2D rb;
     private Animator animator;
     private Vector2 movement;
-    public KeyCode attackKey = KeyCode.Space; // Tecla de ataque
+    public KeyCode attackKey = KeyCode.Space;
+    public KeyCode jumpKey = KeyCode.W;
+    public KeyCode dashKey = KeyCode.LeftShift;
+    public KeyCode blockKey = KeyCode.LeftControl;
     private bool isDead = false;
     private int comboStep = 0;
     private float lastClickTime = 0f;
-    private float comboMaxDelay = 0.8f; // tempo pra apertar o próximo ataque
-
+    private float comboMaxDelay = 0.4f;
+    private bool isGrounded = false;
+    private bool wasRunning = false; // 👈 novo: pra saber se estava correndo antes
+    private bool wasMoving = false;  // Novo: pra saber se estava se movendo no frame anterior
 
     void Start()
     {
@@ -23,29 +34,71 @@ public class PlayerMovement : MonoBehaviour
     {
         if (isDead) return;
 
-        // ataque
+        // Detectar se está no chão
+        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+        animator.SetBool("IsGrounded", isGrounded);
+
+        // Captura o input de movimento
+        float inputX = Input.GetAxisRaw("Horizontal");
+
+        // Atualiza movimento
+        movement.x = inputX;
+
+        // Flipar sprite apenas se tiver movimento
+        if (Mathf.Abs(inputX) > 0.01f)
+        {
+            transform.localScale = new Vector3(Mathf.Sign(inputX), 1, 1);
+        }
+
+        // Atualiza parâmetro de Speed (pra animações de correr e idle)
+        animator.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
+
+        // Se o jogador estava se movendo rápido e parou completamente
+        bool isRunning = Mathf.Abs(rb.linearVelocity.x) > 0.1f;
+        bool isTryingToMove = Mathf.Abs(inputX) > 0.1f;
+
+        // Detectar parada real: estava correndo e parou completamente
+        if (wasRunning && !isRunning && !isTryingToMove && isGrounded)
+        {
+            animator.SetTrigger("Stop");
+        }
+
+        wasRunning = isRunning;
+
+        // Attack
+        float timeSinceLastClick = Time.time - lastClickTime;
+
+        if (timeSinceLastClick > comboMaxDelay)
+        {
+            comboStep = 0;
+            animator.SetInteger("ComboStep", 0);
+        }
+
         if (Input.GetKeyDown(attackKey))
         {
+            lastClickTime = Time.time;
             HandleCombo();
         }
 
-        movement.x = Input.GetAxisRaw("Horizontal");
-        // movement.y = Input.GetAxisRaw("Vertical");
+        // Block
+        animator.SetBool("Block", false);
+        if (Input.GetKey(blockKey))
+        {
+            animator.SetBool("Block", true);
+            movement.x = 0;
+        }
 
-        if (movement.x > 0)
-            transform.localScale = new Vector3(1, 1, 1); // olhando pra direita
-        else if (movement.x < 0)
-            transform.localScale = new Vector3(-1, 1, 1); // olhando pra esquerda
-
-        animator.SetFloat("Horizontal", movement.x);
-        // animator.SetFloat("Vertical", movement.y);
-        animator.SetFloat("Speed", movement.sqrMagnitude);
-        
+        // Jump (só se estiver no chão)
+        if (Input.GetKeyDown(jumpKey) && isGrounded)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+            animator.SetTrigger("Jump");
+        }
     }
 
     void FixedUpdate()
     {
-        rb.MovePosition(rb.position + movement * moveSpeed * Time.fixedDeltaTime);
+        rb.linearVelocity = new Vector2(movement.x * moveSpeed, rb.linearVelocity.y);
     }
 
     public void Die()
@@ -53,33 +106,31 @@ public class PlayerMovement : MonoBehaviour
         isDead = true;
         animator.SetBool("IsDead", true);
         rb.linearVelocity = Vector2.zero;
-        // opcional: GetComponent<Collider2D>().enabled = false;
     }
 
     void HandleCombo()
     {
-        float timeSinceLastClick = Time.time - lastClickTime;
-        lastClickTime = Time.time;
-
-        if (timeSinceLastClick > comboMaxDelay)
-        {
-            comboStep = 0;
-        }
+        if (comboStep == 0) animator.SetTrigger("Attack");
 
         comboStep++;
+        if (comboStep > 3) comboStep = 0;
 
-        if (comboStep > 3)
-        {
-            comboStep = 0;
-        }
-
+        Debug.Log("ComboStep: " + comboStep);
         animator.SetInteger("ComboStep", comboStep);
-        animator.SetTrigger("Attack");
     }
-    
+
     public void ResetCombo()
     {
         comboStep = 0;
+        animator.SetInteger("ComboStep", 0);
     }
 
+    void OnDrawGizmosSelected()
+    {
+        if (groundCheck != null)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
+        }
+    }
 }
