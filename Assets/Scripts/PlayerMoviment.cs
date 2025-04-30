@@ -23,6 +23,11 @@ public class PlayerMovement : MonoBehaviour
     private bool isGrounded = false;
     private bool wasRunning = false; // 👈 novo: pra saber se estava correndo antes
     private bool wasMoving = false;  // Novo: pra saber se estava se movendo no frame anterior
+    public KeyCode chargeKey = KeyCode.C; // ou use o mesmo botão de ataque
+    private bool isCharging = false;
+    private float chargeStartTime = 0f;
+    public float maxChargeTime = 2f; // tempo máximo para carga total
+
 
     void Start()
     {
@@ -80,6 +85,39 @@ public class PlayerMovement : MonoBehaviour
             HandleCombo();
         }
 
+        // Começa a carregar
+        if (Input.GetKeyDown(chargeKey))
+        {
+            isCharging = true;
+            chargeStartTime = Time.time;
+            animator.SetBool("Charging", true); // opcional, se tiver animação de carregar
+        }
+
+        // Está carregando (opcional: mostrar efeitos visuais)
+        if (isCharging)
+        {
+            float chargeProgress = Mathf.Clamp01((Time.time - chargeStartTime) / maxChargeTime);
+            // Aqui você pode mostrar uma barra de carga ou efeito de brilho, etc.
+        }
+
+        // Solta e executa o ataque carregado
+        if (Input.GetKeyUp(chargeKey) && isCharging)
+        {
+            isCharging = false;
+            animator.SetBool("Charging", false);
+
+            float chargeDuration = Time.time - chargeStartTime;
+
+            if (chargeDuration >= maxChargeTime)
+            {
+                PerformChargedAttack(); // carga total
+            }
+            else
+            {
+                PerformLightChargedAttack(); // carga parcial
+            }
+        }
+
         // Block
         animator.SetBool("Block", false);
         if (Input.GetKey(blockKey))
@@ -132,5 +170,19 @@ public class PlayerMovement : MonoBehaviour
             Gizmos.color = Color.green;
             Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
         }
+    }
+
+    void PerformChargedAttack()
+    {
+        Debug.Log("Ataque carregado completo!");
+        animator.SetTrigger("ChargedAttack");
+        // TODO: disparar ataque poderoso, spawnar hitbox, efeitos etc.
+    }
+
+    void PerformLightChargedAttack()
+    {
+        Debug.Log("Ataque carregado leve!");
+        animator.SetTrigger("LightChargedAttack");
+        // TODO: disparar ataque fraco ou médio
     }
 }
