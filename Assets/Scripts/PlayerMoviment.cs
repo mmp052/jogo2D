@@ -3,8 +3,8 @@ using System.Collections;
 
 public class PlayerMovement : MonoBehaviour
 {
-    public float moveSpeed = 2f;
-    public float jumpForce = 5f;
+    public float moveSpeed = 4f;
+    public float jumpForce = 10f;
     public Transform groundCheck;
     public float groundCheckRadius = 0.1f;
     public LayerMask groundLayer;
@@ -14,7 +14,6 @@ public class PlayerMovement : MonoBehaviour
     private Vector2 movement;
     public KeyCode attackKey = KeyCode.Space;
     public KeyCode jumpKey = KeyCode.W;
-    public KeyCode dashKey = KeyCode.LeftShift;
     public KeyCode blockKey = KeyCode.LeftControl;
     private bool isDead = false;
     private int comboStep = 0;
@@ -26,9 +25,35 @@ public class PlayerMovement : MonoBehaviour
     public KeyCode chargeKey = KeyCode.C; // ou use o mesmo botão de ataque
     private bool isCharging = false;
     private float chargeStartTime = 0f;
-    public float maxChargeTime = 2f; // tempo máximo para carga total
+    public float maxChargeTime = 0.5f; // tempo máximo para carga total
+    private bool readyToAttack = false;
+    public KeyCode jumpAttackKey = KeyCode.Space;
+    private bool isJumpAttacking = false;
+    private int jumpComboStep = 0;
+    private float jumpComboMaxDelay = 0.4f;
+    private float lastJumpAttackTime = 0f;
 
+    // Airdash
+    public float airDashSpeed = 10f;
+    public float airDashDuration = 0.2f;
+    public KeyCode airDashKey = KeyCode.LeftShift;
 
+    private bool isAirDashing = false;
+    private bool hasAirDashed = false;
+    private float airDashTimer = 0f;
+
+    // Dash terrestre
+    public float dashSpeed = 12f;
+    public float dashDuration = 0.2f;
+    public KeyCode dashKey = KeyCode.LeftShift;
+
+    private bool isDashing = false;
+    private float dashTimer = 0f;
+
+    // Knockback
+    public float knockbackForce = 5f;
+    public float knockbackDuration = 0.3f;
+    private bool isKnockbacked = false;
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -38,39 +63,78 @@ public class PlayerMovement : MonoBehaviour
     void Update()
     {
         if (isDead) return;
+        if (isKnockbacked) return;
 
-        // Detectar se está no chão
+        UpdateGroundDetection();
+        UpdateMovementInput();
+        UpdateFacingDirection();
+        UpdateAnimationParameters();
+        UpdateStopTrigger();
+
+        UpdateAttackCombo();
+        UpdateChargeAttack();
+        UpdateJumpAttack();
+        UpdateJump();
+        UpdateBlock();
+        UpdateAirDash();
+        UpdateDash();
+    }
+    void FixedUpdate()
+    {
+        if (isAirDashing)
+        {
+            float dashDirection = transform.localScale.x > 0 ? 1f : -1f;
+            rb.linearVelocity = new Vector2(dashDirection * airDashSpeed, 0f);
+        }
+        else if (isDashing)
+        {
+            float dashDirection = transform.localScale.x > 0 ? 1f : -1f;
+            rb.linearVelocity = new Vector2(dashDirection * dashSpeed, rb.linearVelocity.y);
+        }
+        else
+        {
+            rb.linearVelocity = new Vector2(movement.x * moveSpeed, rb.linearVelocity.y);
+        }
+    }
+    void UpdateGroundDetection()
+    {
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
         animator.SetBool("IsGrounded", isGrounded);
-
-        // Captura o input de movimento
-        float inputX = Input.GetAxisRaw("Horizontal");
-
-        // Atualiza movimento
-        movement.x = inputX;
-
-        // Flipar sprite apenas se tiver movimento
-        if (Mathf.Abs(inputX) > 0.01f)
+        if (isGrounded)
         {
-            transform.localScale = new Vector3(Mathf.Sign(inputX), 1, 1);
+            hasAirDashed = false;
         }
-
-        // Atualiza parâmetro de Speed (pra animações de correr e idle)
+    }
+    void UpdateMovementInput()
+    {
+        float inputX = Input.GetAxisRaw("Horizontal");
+        movement.x = inputX;
+    }
+    void UpdateFacingDirection()
+    {
+        if (Mathf.Abs(movement.x) > 0.01f)
+        {
+            transform.localScale = new Vector3(Mathf.Sign(movement.x), 1, 1);
+        }
+    }
+    void UpdateAnimationParameters()
+    {
         animator.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
-
-        // Se o jogador estava se movendo rápido e parou completamente
+    }
+    void UpdateStopTrigger()
+    {
         bool isRunning = Mathf.Abs(rb.linearVelocity.x) > 0.1f;
-        bool isTryingToMove = Mathf.Abs(inputX) > 0.1f;
+        bool isTryingToMove = Mathf.Abs(movement.x) > 0.1f;
 
-        // Detectar parada real: estava correndo e parou completamente
         if (wasRunning && !isRunning && !isTryingToMove && isGrounded)
         {
             animator.SetTrigger("Stop");
         }
 
         wasRunning = isRunning;
-
-        // Attack
+    }
+    void UpdateAttackCombo()
+    {
         float timeSinceLastClick = Time.time - lastClickTime;
 
         if (timeSinceLastClick > comboMaxDelay)
@@ -79,66 +143,129 @@ public class PlayerMovement : MonoBehaviour
             animator.SetInteger("ComboStep", 0);
         }
 
-        if (Input.GetKeyDown(attackKey))
+        if (isGrounded && Input.GetKeyDown(attackKey))
         {
             lastClickTime = Time.time;
             HandleCombo();
         }
-
-        // Começa a carregar
+    }
+    void UpdateChargeAttack()
+    {
         if (Input.GetKeyDown(chargeKey))
         {
             isCharging = true;
             chargeStartTime = Time.time;
-            animator.SetBool("Charging", true); // opcional, se tiver animação de carregar
+            animator.SetBool("Charging", true);
         }
 
-        // Está carregando (opcional: mostrar efeitos visuais)
-        if (isCharging)
-        {
-            float chargeProgress = Mathf.Clamp01((Time.time - chargeStartTime) / maxChargeTime);
-            // Aqui você pode mostrar uma barra de carga ou efeito de brilho, etc.
-        }
-
-        // Solta e executa o ataque carregado
-        if (Input.GetKeyUp(chargeKey) && isCharging)
+        if (isCharging && Input.GetKeyUp(chargeKey))
         {
             isCharging = false;
             animator.SetBool("Charging", false);
 
             float chargeDuration = Time.time - chargeStartTime;
-
             if (chargeDuration >= maxChargeTime)
             {
-                PerformChargedAttack(); // carga total
-            }
-            else
-            {
-                PerformLightChargedAttack(); // carga parcial
+                readyToAttack = true;
+                animator.SetBool("ReadyToAttack", true);
+                animator.SetTrigger("ChargedAttack");
             }
         }
+    }
+    void UpdateJumpAttack()
+    {
+        if (!isGrounded && Input.GetKeyDown(jumpAttackKey))
+        {
+            float timeSinceLast = Time.time - lastJumpAttackTime;
 
-        // Block
-        animator.SetBool("Block", false);
+            if (timeSinceLast > jumpComboMaxDelay)
+                jumpComboStep = 1;
+            else
+            {
+                jumpComboStep++;
+                if (jumpComboStep > 3) jumpComboStep = 1;
+            }
+
+            lastJumpAttackTime = Time.time;
+            isJumpAttacking = true;
+
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+
+            animator.SetBool("IsJumpAttacking", true);
+            animator.SetInteger("JumpComboStep", jumpComboStep);
+
+            Debug.Log("JumpComboStep: " + jumpComboStep);
+
+            animator.SetTrigger("JumpAttack"); // 🟢 volta o trigger aqui
+
+        }
+    }
+    void UpdateJump()
+    {
+        if (Input.GetKeyDown(jumpKey) && isGrounded)
+        {
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+
+            // define tipo de pulo
+            int jumpType = Mathf.Abs(movement.x) > 0.1f ? 1 : 0;
+            animator.SetInteger("JumpType", jumpType);
+            animator.SetTrigger("Jump");
+        }
+    }
+    void UpdateBlock()
+    {
         if (Input.GetKey(blockKey))
         {
             animator.SetBool("Block", true);
             movement.x = 0;
         }
-
-        // Jump (só se estiver no chão)
-        if (Input.GetKeyDown(jumpKey) && isGrounded)
+        else
         {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-            animator.SetTrigger("Jump");
+            animator.SetBool("Block", false);
         }
     }
-
-    void FixedUpdate()
+    void UpdateAirDash()
     {
-        rb.linearVelocity = new Vector2(movement.x * moveSpeed, rb.linearVelocity.y);
-    }
+        if (!isGrounded && !hasAirDashed && Input.GetKeyDown(airDashKey))
+        {
+            isAirDashing = true;
+            hasAirDashed = true;
+            airDashTimer = airDashDuration;
 
+            // animação ou efeito opcional
+            animator.SetTrigger("AirDash");
+        }
+
+        if (isAirDashing)
+        {
+            airDashTimer -= Time.deltaTime;
+            if (airDashTimer <= 0f)
+            {
+                isAirDashing = false;
+            }
+        }
+    }
+    void UpdateDash()
+    {
+        if (isGrounded && !isDashing && Input.GetKeyDown(dashKey))
+        {
+            isDashing = true;
+            animator.SetBool("IsDashing", true);
+            dashTimer = dashDuration;
+
+            animator.SetTrigger("Dash"); // animação opcional
+        }
+
+        if (isDashing)
+        {
+            dashTimer -= Time.deltaTime;
+            if (dashTimer <= 0f)
+            {
+                isDashing = false;
+                animator.SetBool("IsDashing", false);
+            }
+        }
+    }
     public void Die()
     {
         isDead = true;
@@ -172,17 +299,39 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    void PerformChargedAttack()
+    public void EndChargedAttack()
     {
-        Debug.Log("Ataque carregado completo!");
-        animator.SetTrigger("ChargedAttack");
-        // TODO: disparar ataque poderoso, spawnar hitbox, efeitos etc.
+        readyToAttack = false;
+        animator.SetBool("ReadyToAttack", false);
+    }
+    public void EndJumpAttack()
+    {
+        isJumpAttacking = false;
+        jumpComboStep = 0;
+        animator.SetBool("IsJumpAttacking", false);
+        animator.SetInteger("JumpComboStep", 0);
     }
 
-    void PerformLightChargedAttack()
+    public void TakeDamage(Vector2 damageSourcePosition)
     {
-        Debug.Log("Ataque carregado leve!");
-        animator.SetTrigger("LightChargedAttack");
-        // TODO: disparar ataque fraco ou médio
+        if (isKnockbacked || isDead) return;
+
+        isKnockbacked = true;
+        animator.SetBool("IsHurt", true);
+
+        // calcula direção do knockback (empurra do lado contrário do dano)
+        float direction = transform.position.x > damageSourcePosition.x ? 1f : -1f;
+        rb.linearVelocity = new Vector2(direction * knockbackForce, rb.linearVelocity.y + 2f); // também joga pra cima levemente
+
+        // desabilita controle por tempo curto
+        StartCoroutine(EndKnockbackAfterDelay());
     }
+    IEnumerator EndKnockbackAfterDelay()
+    {
+        yield return new WaitForSeconds(knockbackDuration);
+
+        animator.SetBool("IsHurt", false);
+        isKnockbacked = false;
+    }
+
 }

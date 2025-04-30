@@ -4551,7 +4551,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveSpeed: 2
-  jumpForce: 5
+  jumpForce: 15
   groundCheck: {fileID: 513634204}
   groundCheckRadius: 0.1
   groundLayer:
@@ -4559,8 +4559,18 @@ MonoBehaviour:
     m_Bits: 8
   attackKey: 32
   jumpKey: 119
-  dashKey: 304
   blockKey: 306
+  chargeKey: 99
+  maxChargeTime: 0.5
+  jumpAttackKey: 32
+  airDashSpeed: 10
+  airDashDuration: 0.2
+  airDashKey: 304
+  dashSpeed: 12
+  dashDuration: 0.2
+  dashKey: 304
+  knockbackForce: 5
+  knockbackDuration: 0.3
 --- !u!61 &1424346042
 BoxCollider2D:
   m_ObjectHideFlags: 0
