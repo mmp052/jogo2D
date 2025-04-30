@@ -49,7 +49,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -63,7 +63,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 16
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -260,7 +260,12 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      pipo-mapeffect023_480_0: -2115181907646180024
+      pipo-mapeffect023_480_1: 6354611330652856994
+      pipo-mapeffect023_480_2: -4664647215382659439
+      pipo-mapeffect023_480_3: -410981750897329974
+      pipo-mapeffect023_480_4: -4295155190175803703
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

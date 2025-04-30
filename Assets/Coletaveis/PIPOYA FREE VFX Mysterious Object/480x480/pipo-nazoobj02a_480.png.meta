@@ -52,7 +52,7 @@ TextureImporter:
   maxTextureSize: 2048
   textureSettings:
     serializedVersion: 2
-    filterMode: 1
+    filterMode: 0
     aniso: 1
     mipBias: 0
     wrapU: 1
@@ -66,7 +66,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: 16
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -285,7 +285,13 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      pipo-nazoobj02a_480_0: 3402373965732375217
+      pipo-nazoobj02a_480_1: 549556749442415148
+      pipo-nazoobj02a_480_2: -6778146499321336938
+      pipo-nazoobj02a_480_3: -5323829917261867262
+      pipo-nazoobj02a_480_4: 6382117231855251292
+      pipo-nazoobj02a_480_5: 9077656280292997892
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
