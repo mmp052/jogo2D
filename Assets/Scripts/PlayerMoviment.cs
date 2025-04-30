@@ -6,7 +6,7 @@ public class PlayerMovement : MonoBehaviour
     public float moveSpeed = 2f;
     public float jumpForce = 5f;
     public Transform groundCheck;
-    public float groundCheckRadius = 0.05f;
+    public float groundCheckRadius = 0.1f;
     public LayerMask groundLayer;
 
     private Rigidbody2D rb;
