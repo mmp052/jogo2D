@@ -21,7 +21,6 @@ public class PlayerMovement : MonoBehaviour
     private float comboMaxDelay = 0.4f;
     private bool isGrounded = false;
     private bool wasRunning = false; // 👈 novo: pra saber se estava correndo antes
-    private bool wasMoving = false;  // Novo: pra saber se estava se movendo no frame anterior
     public KeyCode chargeKey = KeyCode.C; // ou use o mesmo botão de ataque
     private bool isCharging = false;
     private float chargeStartTime = 0f;
