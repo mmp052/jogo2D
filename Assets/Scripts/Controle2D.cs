@@ -8,7 +8,7 @@ namespace Arcaedion.DevDasGalaxias
     {
         #region Variaveis do editor
         [SerializeField]
-        private float _forcaDoPulo = 200f;          // Força do pulo
+        private float _forcaDoPulo = 2f;          // Força do pulo
         [SerializeField]
         private LayerMask _camadaChao;              // Qual camada é considerada chão
         [SerializeField]
@@ -63,7 +63,7 @@ namespace Arcaedion.DevDasGalaxias
             {
                 // Add a vertical force to the player.
                 _estaNoChao = false;
-                _rigidbody2D.AddForce(new Vector2(0f, _forcaDoPulo));
+                _rigidbody2D.AddForce(Vector2.up * _forcaDoPulo, ForceMode2D.Impulse);
             }
         }
 

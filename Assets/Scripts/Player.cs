@@ -4,6 +4,11 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    public void TakeDamage(int damage)
+    {
+        // Implementar lógica de dano aqui
+        Debug.Log("Dano recebido: " + damage);
+    }
     public void IniciaAtaque()
     {
         // Implementar lógica de ataque aqui

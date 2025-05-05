@@ -21,11 +21,14 @@ public class IAEnemy : MonoBehaviour
     [SerializeField]
     private float _rangeDeDeteccao = 3f; // Distância de detecção do inimigo
     [SerializeField]
-    private bool _modoPerseguicao = false;
+    private bool _podePular = false;
     [SerializeField]
     private Player _player;
     private bool _pulando; // Variável para armazenar se o jogador está pulando
     private bool _seguindoPlayer; // Variável para armazenar se o inimigo está seguindo o jogador
+    [SerializeField] 
+    private int damage = 1;  // Quanto dano o inimigo causa
+    private bool podeAtacar = true;
     private void OnEnable()
     {
         _rb = GetComponent<Rigidbody2D>();
@@ -60,7 +63,7 @@ public class IAEnemy : MonoBehaviour
     {
         var diferencaParaPlayer = _player.transform.position.x - transform.position.x; // Calcula a diferença de posição entre o inimigo e o jogador
         _seguindoPlayer = Math.Abs(diferencaParaPlayer) < _rangeDeDeteccao; // Verifica se o jogador está dentro do alcance de detecção
-        if(_modoPerseguicao && _seguindoPlayer) // Se o modo de perseguição estiver ativado e o jogador estiver dentro do alcance
+        if(_seguindoPlayer) // Se o modo de perseguição estiver ativado e o jogador estiver dentro do alcance
         {
             if(diferencaParaPlayer > 0) // Se o jogador estiver à direita do inimigo
             {
@@ -86,9 +89,15 @@ public class IAEnemy : MonoBehaviour
             }
             else // Se o inimigo estiver seguindo o jogador
             {
-                Pula(); // Faz o inimigo pular
+                if(_podePular) // Se o inimigo puder pular
+                {
+                    Pula(); // Faz o inimigo pular
+                }
+                else // Se o inimigo não puder pular
+                {
+                    _andandoParaDireita = 0; // Inverte a direção do movimento
+                }
             }
-
         }
 
         var raycastParedeEsquerda = Physics2D.Raycast(new Vector2(transform.position.x - _raycastOffset.x, OrigemY), Vector2.left, 1f, _layersPermitidas);
@@ -101,7 +110,14 @@ public class IAEnemy : MonoBehaviour
             }
             else // Se o inimigo estiver seguindo o jogador
             {
-                Pula(); // Faz o inimigo pular
+                if(_podePular) // Se o inimigo puder pular
+                {
+                    Pula(); // Faz o inimigo pular
+                }
+                else // Se o inimigo não puder pular
+                {
+                    _andandoParaDireita = 0; // Inverte a direção do movimento
+                }
             }
         }
     }
@@ -117,7 +133,14 @@ public class IAEnemy : MonoBehaviour
             }
             else // Se o inimigo estiver seguindo o jogador
             {
-                Pula(); // Faz o inimigo pular
+                if(_podePular) // Se o inimigo puder pular
+                {
+                    Pula(); // Faz o inimigo pular
+                }
+                else // Se o inimigo não puder pular
+                {
+                    _andandoParaDireita = 0; // Inverte a direção do movimento
+                }
             }
         }
 
@@ -131,7 +154,14 @@ public class IAEnemy : MonoBehaviour
             }
             else // Se o inimigo estiver seguindo o jogador
             {
-                Pula(); // Faz o inimigo pular
+                if(_podePular) // Se o inimigo puder pular
+                {
+                    Pula(); // Faz o inimigo pular
+                }
+                else // Se o inimigo não puder pular
+                {
+                    _andandoParaDireita = 0;
+                }
             }
         }
     }
@@ -139,6 +169,7 @@ public class IAEnemy : MonoBehaviour
     {
         if(_controle.EstaNoChao())
         {
+            Debug.Log("Pulando"); // Log para depuração
             _pulando = true; // Define a variável de pulo como verdadeira
         }
     }
@@ -148,5 +179,28 @@ public class IAEnemy : MonoBehaviour
         // Desenha uma esfera um pouco acima da posição do inimigo com o raio de detecção
         Gizmos.DrawWireSphere(new Vector2(transform.position.x, transform.position.y), _rangeDeDeteccao);
         
+    }
+    private void OnTriggerEnter2D(Collider2D other)
+    {
+        if (podeAtacar && other.CompareTag("Player"))
+        {
+            // 1) Toca animação de ataque
+            _animator.SetTrigger("Attack");
+
+            // 2) Chama o TakeDamage do Player, passando a posição do inimigo
+            var pm = other.GetComponent<PlayerMovement>();
+            if (pm != null)
+                pm.TakeDamage(transform.position);
+
+            // 3) (Opcional) Desabilita o trigger por um cooldown
+            StartCoroutine(CooldownDeAtaque());
+        }
+    }
+    // Opcional: evita ataques contínuos
+    private IEnumerator CooldownDeAtaque()
+    {
+        podeAtacar = false;
+        yield return new WaitForSeconds(0.5f); //  meio segundo de intervalo
+        podeAtacar = true;
     }
 }
