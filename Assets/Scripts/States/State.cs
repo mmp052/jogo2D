@@ -28,7 +28,7 @@ namespace FSM
             //TODO// Implementação do comportamento}
         }
 
-        public void LateUpdate()
+        public virtual void LateUpdate()
         {
             foreach (Transition t in transitions) {
                 // Para cada transição que esse estado tiver// é feita a verificação de sua condiçãoforeach (Transition t in transitions) {
