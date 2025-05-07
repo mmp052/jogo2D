@@ -3,6 +3,11 @@ using System.Collections;
 
 public class PlayerMovement : MonoBehaviour
 {
+    // Informações de status do player
+    [SerializeField]
+    private int _vida = 100;
+    private int _ataque = 10;
+    private int _defesa = 1;
     public float moveSpeed = 4f;
     public float jumpForce = 10f;
     public Transform groundCheck;
@@ -31,6 +36,15 @@ public class PlayerMovement : MonoBehaviour
     private int jumpComboStep = 0;
     private float jumpComboMaxDelay = 0.4f;
     private float lastJumpAttackTime = 0f;
+    // som
+    private AudioSource _audioSource;
+
+    // ataque
+    private BoxCollider2D _hitbox;
+
+    // ataque carregado
+    private bool _charge = false;
+    private int _chargeAttack = 20; // dano do ataque carregado
 
     // Airdash
     public float airDashSpeed = 10f;
@@ -50,13 +64,14 @@ public class PlayerMovement : MonoBehaviour
     private float dashTimer = 0f;
 
     // Knockback
-    public float knockbackForce = 5f;
+    public float knockbackForce = 10f;
     public float knockbackDuration = 0.3f;
     private bool isKnockbacked = false;
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        _audioSource = GetComponent<AudioSource>();
     }
 
     void Update()
@@ -89,6 +104,10 @@ public class PlayerMovement : MonoBehaviour
         {
             float dashDirection = transform.localScale.x > 0 ? 1f : -1f;
             rb.linearVelocity = new Vector2(dashDirection * dashSpeed, rb.linearVelocity.y);
+        }
+        else if (isKnockbacked)
+        {
+            return;
         }
         else
         {
@@ -144,6 +163,7 @@ public class PlayerMovement : MonoBehaviour
 
         if (isGrounded && Input.GetKeyDown(attackKey))
         {
+            _audioSource.Play(); // Toca o som do ataque
             lastClickTime = Time.time;
             HandleCombo();
         }
@@ -165,6 +185,7 @@ public class PlayerMovement : MonoBehaviour
             float chargeDuration = Time.time - chargeStartTime;
             if (chargeDuration >= maxChargeTime)
             {
+                _audioSource.Play(); // Toca o som do ataque
                 readyToAttack = true;
                 animator.SetBool("ReadyToAttack", true);
                 animator.SetTrigger("ChargedAttack");
@@ -175,6 +196,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (!isGrounded && Input.GetKeyDown(jumpAttackKey))
         {
+            _audioSource.Play(); // Toca o som do ataque
             float timeSinceLast = Time.time - lastJumpAttackTime;
 
             if (timeSinceLast > jumpComboMaxDelay)
@@ -195,7 +217,7 @@ public class PlayerMovement : MonoBehaviour
 
             Debug.Log("JumpComboStep: " + jumpComboStep);
 
-            animator.SetTrigger("JumpAttack"); // 🟢 volta o trigger aqui
+            animator.SetTrigger("JumpAttack");
 
         }
     }
@@ -302,6 +324,8 @@ public class PlayerMovement : MonoBehaviour
     {
         readyToAttack = false;
         animator.SetBool("ReadyToAttack", false);
+        this.FinalizaAtaque();
+        _charge = false;
     }
     public void EndJumpAttack()
     {
@@ -311,7 +335,7 @@ public class PlayerMovement : MonoBehaviour
         animator.SetInteger("JumpComboStep", 0);
     }
 
-    public void TakeDamage(Vector2 damageSourcePosition)
+    public void TakeDamage(Vector2 damageSourcePosition, int damage)
     {
         if (isKnockbacked || isDead) return;
 
@@ -322,6 +346,14 @@ public class PlayerMovement : MonoBehaviour
         float direction = transform.position.x > damageSourcePosition.x ? 1f : -1f;
         rb.linearVelocity = new Vector2(direction * knockbackForce, rb.linearVelocity.y + 2f); // também joga pra cima levemente
 
+        // aplica dano (aqui você pode adicionar lógica para reduzir a vida do jogador)
+        damage -= _defesa; // Aplica defesa
+        _vida -= damage;
+        if (_vida <= 0)
+        {
+            Die();
+        }
+
         // desabilita controle por tempo curto
         StartCoroutine(EndKnockbackAfterDelay());
     }
@@ -331,6 +363,38 @@ public class PlayerMovement : MonoBehaviour
 
         animator.SetBool("IsHurt", false);
         isKnockbacked = false;
+    }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        // Se não estivermos com o hitbox de ataque ligado, sai
+        if (_hitbox == null || !_hitbox.enabled) return;
+        
+        if (other.CompareTag("Enemy"))
+        {
+            var enemy = other.GetComponent<Enemy>();
+            if (enemy != null)
+            {
+                enemy.TakeDamage(transform.position, _charge ? _chargeAttack : _ataque);
+                Debug.Log("Dano causado" + (_charge ? _chargeAttack : _ataque) + " para o inimigo!");
+            }
+        }
+    }
+
+    public void IniciaAtaque()
+    {
+        _hitbox = GetComponent<BoxCollider2D>();
+        _hitbox.enabled = true;
+    }
+    public void FinalizaAtaque()
+    {
+        _hitbox.enabled = false;
+    }
+
+    public void iniciaChargeAttack()
+    {
+        this.IniciaAtaque();
+        _charge = true;
     }
 
 }

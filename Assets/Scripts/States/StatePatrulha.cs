@@ -61,6 +61,21 @@ public class StatePatrulha: State
 
     }
 
+    public override void LateUpdate()
+    {
+        foreach (Transition t in transitions) {
+            // Para cada transição que esse estado tiver// é feita a verificação de sua condiçãoforeach (Transition t in transitions) {
+            if (t.condition.Test()) 
+            {
+                t.target.enabled = true;
+                this.enabled = false;
+                rb.linearVelocity = Vector3.zero; // Para o movimento do inimigo ao mudar de estado
+                _animator.SetFloat("Speed", 0); // Para a animação de corrida ao mudar de estado
+                return;
+            }
+        }
+    }
+
     int normalizedDirection() {
         // Debug.Log(waypoints[nextWaypoint].position.x + " - " + transform.position.x + " = " + direction);
         if (Mathf.Abs(_direction) > 0.2)

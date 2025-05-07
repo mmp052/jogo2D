@@ -4,19 +4,17 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    private int _vida = 100;
+    private int _ataque = 10;
+    private int _defesa = 1;
+    private Animator _animator;
+
     public void TakeDamage(int damage)
     {
         // Implementar lógica de dano aqui
         Debug.Log("Dano recebido: " + damage);
-    }
-    public void IniciaAtaque()
-    {
-        // Implementar lógica de ataque aqui
-        Debug.Log("Ataque iniciado!");
-    }
-    public void FinalizaAtaque()
-    {
-        // Implementar lógica de finalização de ataque aqui
-        Debug.Log("Ataque finalizado!");
+        _vida -= damage - _defesa;
+
+
     }
 }
