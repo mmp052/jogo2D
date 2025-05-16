@@ -4799,17 +4799,25 @@ MonoBehaviour:
   attackKey: 32
   jumpKey: 119
   blockKey: 306
-  chargeKey: 99
-  maxChargeTime: 0.5
+  transformKey: 116
   jumpAttackKey: 32
+  airDashKey: 304
+  dashKey: 304
   airDashSpeed: 15
   airDashDuration: 0.2
-  airDashKey: 304
   dashSpeed: 15
   dashDuration: 0.2
-  dashKey: 304
   knockbackForce: 5
   knockbackDuration: 0.3
+  chargeKey: 99
+  maxChargeTime: 0.5
+  normalHitboxSize: {x: 2.5, y: 1}
+  transformedHitboxSize: {x: 5, y: 1.2}
+  normalController: {fileID: 9100000, guid: aef1cdc3747fdea4a94ed7004343e502, type: 2}
+  transformedController: {fileID: 9100000, guid: e274138857a804e479dd7d23e5ff0733, type: 2}
+  transformSound: {fileID: 0}
+  transformVFXPrefab: {fileID: 0}
+  transformVFXDuration: 1
 --- !u!61 &1424346042
 BoxCollider2D:
   m_ObjectHideFlags: 0
