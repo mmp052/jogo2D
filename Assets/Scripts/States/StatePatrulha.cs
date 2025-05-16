@@ -32,7 +32,16 @@ public class StatePatrulha: State
 
         nextWaypoint = 1;
 
+        // criação explícita da transição de dano:
+        Transition toDano = new Transition();
+        toDano.condition = new ConditionDamage(me);
+        toDano.target = GetComponent<StateDano>();
+        transitions.Add(toDano);
         
+        var toMorte = new Transition();
+        toMorte.condition = new ConditionDeath(me);
+        toMorte.target    = GetComponent<StateMorte>();
+        transitions.Add(toMorte);
     }
 
     public override void Update()
@@ -63,9 +72,11 @@ public class StatePatrulha: State
 
     public override void LateUpdate()
     {
-        foreach (Transition t in transitions) {
+        Debug.Log($"[Patrulha] flagEnterAttack={me.flagEnterAttack}");
+        foreach (Transition t in transitions)
+        {
             // Para cada transição que esse estado tiver// é feita a verificação de sua condiçãoforeach (Transition t in transitions) {
-            if (t.condition.Test()) 
+            if (t.condition.Test())
             {
                 t.target.enabled = true;
                 this.enabled = false;
