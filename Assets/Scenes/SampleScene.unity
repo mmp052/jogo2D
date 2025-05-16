@@ -4802,10 +4802,10 @@ MonoBehaviour:
   chargeKey: 99
   maxChargeTime: 0.5
   jumpAttackKey: 32
-  airDashSpeed: 12
+  airDashSpeed: 15
   airDashDuration: 0.2
   airDashKey: 304
-  dashSpeed: 12
+  dashSpeed: 15
   dashDuration: 0.2
   dashKey: 304
   knockbackForce: 5

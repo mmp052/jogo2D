@@ -25,17 +25,18 @@ public class PlayerMovement : MonoBehaviour
     private float lastClickTime = 0f;
     private float comboMaxDelay = 0.4f;
     private bool isGrounded = false;
-    private bool wasRunning = false; // 👈 novo: pra saber se estava correndo antes
-    public KeyCode chargeKey = KeyCode.C; // ou use o mesmo botão de ataque
+    private bool wasRunning = false;
+    public KeyCode chargeKey = KeyCode.C;
     private bool isCharging = false;
     private float chargeStartTime = 0f;
-    public float maxChargeTime = 0.5f; // tempo máximo para carga total
+    public float maxChargeTime = 0.5f;
     private bool readyToAttack = false;
     public KeyCode jumpAttackKey = KeyCode.Space;
     private bool isJumpAttacking = false;
     private int jumpComboStep = 0;
     private float jumpComboMaxDelay = 0.4f;
     private float lastJumpAttackTime = 0f;
+
     // som
     private AudioSource _audioSource;
 
@@ -44,7 +45,7 @@ public class PlayerMovement : MonoBehaviour
 
     // ataque carregado
     private bool _charge = false;
-    private int _chargeAttack = 20; // dano do ataque carregado
+    private int _chargeAttack = 20;
 
     // Airdash
     public float airDashSpeed = 10f;
@@ -67,6 +68,10 @@ public class PlayerMovement : MonoBehaviour
     public float knockbackForce = 10f;
     public float knockbackDuration = 0.3f;
     private bool isKnockbacked = false;
+    private bool isAttacking = false;
+
+    // Block
+    private bool isBlocking = false;
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -127,6 +132,10 @@ public class PlayerMovement : MonoBehaviour
     {
         float inputX = Input.GetAxisRaw("Horizontal");
         movement.x = inputX;
+        if(isAttacking)
+        {
+            movement.x = 0;
+        }
     }
     void UpdateFacingDirection()
     {
@@ -138,6 +147,10 @@ public class PlayerMovement : MonoBehaviour
     void UpdateAnimationParameters()
     {
         animator.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
+        if (isAttacking)
+        {
+            animator.SetFloat("Speed", 0);
+        }
     }
     void UpdateStopTrigger()
     {
@@ -159,10 +172,12 @@ public class PlayerMovement : MonoBehaviour
         {
             comboStep = 0;
             animator.SetInteger("ComboStep", 0);
+            isAttacking = false;
         }
 
         if (isGrounded && Input.GetKeyDown(attackKey))
         {
+            isAttacking = true;
             _audioSource.Play(); // Toca o som do ataque
             lastClickTime = Time.time;
             HandleCombo();
@@ -170,7 +185,7 @@ public class PlayerMovement : MonoBehaviour
     }
     void UpdateChargeAttack()
     {
-        if (Input.GetKeyDown(chargeKey))
+        if (Input.GetKeyDown(chargeKey) && movement.x == 0)
         {
             isCharging = true;
             chargeStartTime = Time.time;
@@ -235,13 +250,16 @@ public class PlayerMovement : MonoBehaviour
     }
     void UpdateBlock()
     {
+        // atualiza flag de bloqueio
         if (Input.GetKey(blockKey))
         {
+            isBlocking = true;
             animator.SetBool("Block", true);
             movement.x = 0;
         }
         else
         {
+            isBlocking = false;
             animator.SetBool("Block", false);
         }
     }
@@ -299,7 +317,11 @@ public class PlayerMovement : MonoBehaviour
         if (comboStep == 0) animator.SetTrigger("Attack");
 
         comboStep++;
-        if (comboStep > 3) comboStep = 0;
+        if (comboStep > 3)
+        {
+            comboStep = 0;
+            isAttacking = false;
+        }
 
         Debug.Log("ComboStep: " + comboStep);
         animator.SetInteger("ComboStep", comboStep);
@@ -309,6 +331,7 @@ public class PlayerMovement : MonoBehaviour
     {
         comboStep = 0;
         animator.SetInteger("ComboStep", 0);
+        // isAttacking = false;
     }
 
     void OnDrawGizmosSelected()
@@ -339,22 +362,28 @@ public class PlayerMovement : MonoBehaviour
     {
         if (isKnockbacked || isDead) return;
 
+        // se estiver bloqueando, executa animação de bloqueio com feedback e não aplica dano
+        if (isBlocking)
+        {
+            animator.SetTrigger("BlockHit"); // animação de bloqueio especial
+            return;
+        }
+
         isKnockbacked = true;
         animator.SetBool("IsHurt", true);
 
-        // calcula direção do knockback (empurra do lado contrário do dano)
+        // calcula direção do knockback
         float direction = transform.position.x > damageSourcePosition.x ? 1f : -1f;
-        rb.linearVelocity = new Vector2(direction * knockbackForce, rb.linearVelocity.y + 2f); // também joga pra cima levemente
+        rb.linearVelocity = new Vector2(direction * knockbackForce, rb.linearVelocity.y + 2f);
 
-        // aplica dano (aqui você pode adicionar lógica para reduzir a vida do jogador)
-        damage -= _defesa; // Aplica defesa
+        // aplica dano
+        damage -= _defesa;
         _vida -= damage;
         if (_vida <= 0)
         {
             Die();
         }
 
-        // desabilita controle por tempo curto
         StartCoroutine(EndKnockbackAfterDelay());
     }
     IEnumerator EndKnockbackAfterDelay()
