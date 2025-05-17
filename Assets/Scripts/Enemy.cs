@@ -1,82 +1,82 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody2D), typeof(Animator))]
 public class Enemy : MonoBehaviour
 {
-    [SerializeField] private int _vida = 60;
-    public int Vida => _vida;
+    [Header("Stats")]
+    [SerializeField] private int maxVida = 60;
+    [SerializeField] private int dano = 10;
+    [SerializeField] private float velocidade = 2f;
+    [SerializeField] private float velocidadePatrulha = 2f;
 
-    // sinaliza se o player está em alcance
-    public bool flagEnterAttack { get; private set; }
+    [Header("Attack Hitbox")]
+    [SerializeField] private Vector2 hitboxSize = new Vector2(1f, 1f);
+    [SerializeField] private Vector2 hitboxOffset = Vector2.zero;
 
-    private int _defesa = 2;
+    // colliders no mesmo GameObject, na ordem: [0]=body, [1]=attack hitbox
+    private BoxCollider2D bodyCollider;
+    private BoxCollider2D attackHitbox;
+    private CapsuleCollider2D detectCollider;
+    private Animator animator;
 
-    // sinaliza que levou dano
-    private bool _damaged = false;
-    public bool Damaged => _damaged;
-    public void ClearDamage() => _damaged = false;
+    // flags internas
+    public int Vida { get; private set; }
+    public bool Damaged { get; private set; }
+    public Vector2 LastDamageSource { get; private set; }
+    public bool FlagEnterAttack { get; private set; }
 
-    // guarda de onde veio o dano
-    private Vector2 _lastDamageSource;
-    public Vector2 LastDamageSource => _lastDamageSource;
+    public int Dano => dano;
+    public float Velocidade => velocidade;
+    public float VelocidadePatrulha => velocidadePatrulha;
 
-    public void TakeDamage(Vector2 from, int damage)
+    void Awake()
     {
-        // registra a origem do hit
-        _lastDamageSource = from;
+        animator     = GetComponent<Animator>();
+        Vida         = maxVida;
+        var boxes    = GetComponents<BoxCollider2D>();
+        bodyCollider = boxes[0];
+        attackHitbox = boxes[1];
+        attackHitbox.size   = hitboxSize;
+        attackHitbox.offset = hitboxOffset;
 
-        // aplica defesa e subtrai vida
-        damage -= _defesa;
-        _vida   -= damage;
+        detectCollider = GetComponent<CapsuleCollider2D>();
+        attackHitbox.enabled = false;
+    }
 
-        if (_vida <= 0)
+    public void TakeDamage(Vector2 from, int amount)
+    {
+        LastDamageSource = from;
+        int final = Mathf.Max(0, amount); 
+        Vida -= Mathf.Max(0, final);
+        if (Vida <= 0)
         {
-            Debug.Log($">>> TakeDamage: Vida chegou a {_vida}, entrando em StateMorte");
-
-            // ① desliga tudo que pode estar ligado
-            var patrol = GetComponent<StatePatrulha>();
-            if (patrol && patrol.enabled) patrol.enabled = false;
-            var attack = GetComponent<StateAtaque>();
-            if (attack && attack.enabled) attack.enabled = false;
-            var dano = GetComponent<StateDano>();
-            if (dano && dano.enabled) dano.enabled = false;
-
-            // ② dispara trigger e habilita o StateMorte
-            GetComponent<Animator>().SetTrigger("Death");
-            var morte = GetComponent<StateMorte>();
-            if (morte)
-            {
-                morte.enabled = true;
-            }
-            else
-            {
-                Debug.LogError("StateMorte não encontrado no GameObject!");
-            }
+            animator.SetTrigger("Death");
+            GetComponent<StateMorte>().enabled = true;
         }
         else
         {
-            // sinaliza dano e aciona state de dano
-            _damaged = true;
-            GetComponent<Animator>().SetTrigger("Hit");
+            Damaged = true;
+            animator.SetTrigger("Hit");
             GetComponent<StateDano>().enabled = true;
         }
     }
 
-    // agora público para ser chamado pelo StateMorte
+    public void ClearDamage() => Damaged = false;
+
+    public void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Player"))
+            FlagEnterAttack = true;
+    }
+    public void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.CompareTag("Player"))
+            FlagEnterAttack = false;
+    }
+
+    // chamado por Event no fim da animação de morte
     public void Die()
     {
-        Debug.Log("Inimigo morreu!");
         Destroy(gameObject);
-    }
-
-    void OnTriggerEnter2D(Collider2D other)
-    {
-        if (other.CompareTag("Player"))
-            flagEnterAttack = true;
-    }
-
-    void OnTriggerExit2D(Collider2D other)
-    {
-        if (other.CompareTag("Player"))
-            flagEnterAttack = false;
     }
 }

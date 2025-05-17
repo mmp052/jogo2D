@@ -32,7 +32,6 @@ public class StateAtaque : State
 
     public override void OnEnable()
     {
-        Debug.Log(">> Entrou em Attack");
         base.OnEnable();
         _audioSource.Play();
         _animator.SetTrigger("Attack");
@@ -46,7 +45,6 @@ public class StateAtaque : State
     }
     private void OnDisable()
     {
-        Debug.Log("<<< StateAtaque: OnDisable  hitbox off");
         // sempre que o Attack for desativado, limpa o hitbox
         if (_hitbox != null)
             _hitbox.enabled = false;
@@ -61,7 +59,6 @@ public class StateAtaque : State
 
     public void finalizarAtaque()
     {
-        Debug.Log(">> finalizarAtaque()");
         // não precisa mais desativar o hitbox aqui, OnDisable já faz
         GetComponent<StatePatrulha>().enabled = true;
         this.enabled = false;
@@ -70,16 +67,18 @@ public class StateAtaque : State
     private IEnumerator CheckHitNextFrame()
     {
         yield return new WaitForFixedUpdate();
-        var cb = _hitbox;
-        Vector2 center = cb.bounds.center;
-        Vector2 size   = cb.bounds.size;
-        Collider2D[] hits = Physics2D.OverlapBoxAll(center, size, 0f, LayerMask.GetMask("Player"));
+        Collider2D[] hits = Physics2D.OverlapBoxAll(
+            _hitbox.bounds.center,
+            _hitbox.bounds.size,
+            0f,
+            LayerMask.GetMask("Player")
+        );
 
         foreach (var hit in hits)
         {
             var pm = hit.GetComponent<PlayerMovement>();
             if (pm != null)
-                pm.TakeDamage(transform.position, 10);
+                pm.TakeDamage(transform.position, me.Dano);
         }
     }
 }

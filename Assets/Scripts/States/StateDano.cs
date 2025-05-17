@@ -37,8 +37,6 @@ public class StateDano : State
     public override void OnEnable()
     {
         base.OnEnable();
-        Debug.Log($"[Knockback] dir={_kbVelocity} duration={_kbTimer}");
-
         // garante que o Attack seja desligado
         var atk = GetComponent<StateAtaque>();
         if (atk.enabled) atk.enabled = false;
@@ -54,7 +52,6 @@ public class StateDano : State
 
     public override void Update()
     {
-        Debug.Log($"[Knockback] posição agora em { _rb.position }");
         base.Update();
         // aplica deslocamento de knockback se o timer ainda não zerou
         if (_kbTimer > 0f)
@@ -68,7 +65,6 @@ public class StateDano : State
     // Animation Event no final da clip "Damage"
     public void OnDamageAnimationEnd()
     {
-        Debug.Log(">> StateDano: OnDamageAnimationEnd limpando knockback");
         _kbTimer = 0f;
         _enemy.ClearDamage();
         this.enabled = false;

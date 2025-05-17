@@ -7,7 +7,6 @@ public class Coletavel : MonoBehaviour
         if (other.CompareTag("Player"))
         {
             // Aqui você pode adicionar pontos, efeitos, etc.
-            Debug.Log("Pegou o coletável!");
 
             // Destrói o coletável
             Destroy(gameObject);

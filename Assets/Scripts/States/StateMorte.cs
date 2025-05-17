@@ -25,7 +25,6 @@ public class StateMorte : State
     // Animation Event no fim da clip "Death":
     public void OnDeathAnimationEnd()
     {
-        Debug.Log(">>> OnDeathAnimationEnd chamado, destruindo inimigo");
         _enemy.Die();
     }
 }

@@ -1,8 +1,11 @@
 using UnityEngine;
 using System.Collections;
+using System;
 
 public class PlayerMovement : MonoBehaviour
 {
+    // Agora o evento carrega quem morreu
+    public static event Action<PlayerMovement> OnPlayerDeath;
     // Informações de status do player
     [SerializeField] private int _vida = 100;
     private int _ataque = 10;
@@ -119,11 +122,11 @@ public class PlayerMovement : MonoBehaviour
         UpdateAnimationParameters();
         UpdateStopTrigger();
 
-        UpdateChargeAttack();
+        UpdateAttackCombo();
         // Apenas se não transformado, habilita pulo, ataque normal e dash
         if (!isTransformed)
         {
-            UpdateAttackCombo();
+            UpdateChargeAttack();
             UpdateJumpAttack();
             UpdateJump();
             UpdateAirDash();
@@ -268,9 +271,6 @@ public class PlayerMovement : MonoBehaviour
 
             animator.SetBool("IsJumpAttacking", true);
             animator.SetInteger("JumpComboStep", jumpComboStep);
-
-            Debug.Log("JumpComboStep: " + jumpComboStep);
-
             animator.SetTrigger("JumpAttack");
 
         }
@@ -349,6 +349,8 @@ public class PlayerMovement : MonoBehaviour
         isDead = true;
         animator.SetBool("IsDead", true);
         rb.linearVelocity = Vector2.zero;
+       // dispara o evento passando this
+        OnPlayerDeath?.Invoke(this);
     }
 
     void HandleCombo()
@@ -415,7 +417,6 @@ public class PlayerMovement : MonoBehaviour
 
         isKnockbacked = true;
         animator.SetBool("IsHurt", true);
-
         // calcula direção do knockback
         float direction = transform.position.x > damageSourcePosition.x ? 1f : -1f;
         rb.linearVelocity = new Vector2(direction * knockbackForce, rb.linearVelocity.y + 2f);
@@ -440,7 +441,7 @@ public class PlayerMovement : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        // Se não estivermos com o hitbox de ataque ligado, sai
+        // // Se não estivermos com o hitbox de ataque ligado, sai
         if (_hitbox == null || !_hitbox.enabled) return;
         
         if (other.CompareTag("Enemy"))
@@ -449,7 +450,6 @@ public class PlayerMovement : MonoBehaviour
             if (enemy != null)
             {
                 enemy.TakeDamage(transform.position, _charge ? _chargeAttack : _ataque);
-                Debug.Log("Dano causado" + (_charge ? _chargeAttack : _ataque) + " para o inimigo!");
             }
         }
     }
