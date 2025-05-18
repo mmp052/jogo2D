@@ -221,7 +221,7 @@ MonoBehaviour:
   attackKey: 32
   jumpKey: 119
   blockKey: 306
-  transformKey: 116
+  transformKey: 113
   jumpAttackKey: 32
   airDashKey: 304
   dashKey: 304
@@ -235,6 +235,7 @@ MonoBehaviour:
   maxChargeTime: 0.5
   normalHitboxSize: {x: 2.5, y: 1}
   transformedHitboxSize: {x: 5, y: 1.2}
+  canTransform: 0
   normalController: {fileID: 9100000, guid: aef1cdc3747fdea4a94ed7004343e502, type: 2}
   transformedController: {fileID: 9100000, guid: e274138857a804e479dd7d23e5ff0733, type: 2}
   transformSound: {fileID: 0}
