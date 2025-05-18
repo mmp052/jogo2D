@@ -8,7 +8,7 @@ public class BilheteColetavel : MonoBehaviour
     [TextArea(3, 10)]
     public string conteudoDoBilhete;
 
-    private bool jogadorPerto = true;
+    private bool jogadorPerto = false;
 
     void Update()
     {
