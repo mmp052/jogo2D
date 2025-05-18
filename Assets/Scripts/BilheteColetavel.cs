@@ -1,9 +1,6 @@
 using UnityEngine;
 using TMPro;
 
-using UnityEngine;
-using TMPro;
-
 public class BilheteColetavel : MonoBehaviour
 {
     public GameObject painelHistoria;
@@ -11,11 +8,27 @@ public class BilheteColetavel : MonoBehaviour
     [TextArea(3, 10)]
     public string conteudoDoBilhete;
 
-    private void OnMouseDown()
+    private bool jogadorPerto = true;
+
+    void Update()
     {
-        painelHistoria.SetActive(true);
-        textoHistoria.text = conteudoDoBilhete;
-        Time.timeScale = 0f; // pausa o jogo
+        if (jogadorPerto && Input.GetKeyDown(KeyCode.E))
+        {
+            painelHistoria.SetActive(true);
+            textoHistoria.text = conteudoDoBilhete;
+            Time.timeScale = 0f; // pausa o jogo
+        }
+    }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Player"))
+            jogadorPerto = true;
+    }
+
+    void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.CompareTag("Player"))
+            jogadorPerto = false;
     }
 }
-
