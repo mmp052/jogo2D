@@ -435,7 +435,19 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      idle to fly_0: 1870480207458918850
+      idle to fly_1: 2386739311064939670
+      idle to fly_10: -2208649095031353928
+      idle to fly_11: -6464582238681148161
+      idle to fly_2: -4977724711519966046
+      idle to fly_3: -7578639256685224923
+      idle to fly_4: 3469245294724315881
+      idle to fly_5: -2034472122381278631
+      idle to fly_6: 664349632548514067
+      idle to fly_7: -7043338122123436497
+      idle to fly_8: -784435209369590329
+      idle to fly_9: -6901825178197261491
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
