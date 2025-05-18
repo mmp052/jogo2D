@@ -65,11 +65,17 @@ public class Enemy : MonoBehaviour
 
     public void OnTriggerEnter2D(Collider2D other)
     {
+        if (other.isTrigger) 
+            return;
+
         if (other.CompareTag("Player"))
             FlagEnterAttack = true;
     }
     public void OnTriggerExit2D(Collider2D other)
     {
+        if (other.isTrigger) 
+            return;
+
         if (other.CompareTag("Player"))
             FlagEnterAttack = false;
     }
