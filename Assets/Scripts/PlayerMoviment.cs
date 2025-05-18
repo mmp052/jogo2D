@@ -1,79 +1,120 @@
 using UnityEngine;
 using System.Collections;
-using UnityEngine.UI;
+using System;
 
 public class PlayerMovement : MonoBehaviour
 {
-    // health bar
-    [SerializeField] private Slider BarraDeVida;  
-    [SerializeField] private int vidaMaxima = 100; 
-    private int _vida;
+    // Agora o evento carrega quem morreu
+    public static event Action<PlayerMovement> OnPlayerDeath;
+    // Informações de status do player
+    [SerializeField] private int _vida = 100;
+    private int _ataque = 10;
+    private int _defesa = 1;
 
+    // Movement parameters
     public float moveSpeed = 4f;
     public float jumpForce = 10f;
     public Transform groundCheck;
     public float groundCheckRadius = 0.1f;
     public LayerMask groundLayer;
 
+    // Components
     private Rigidbody2D rb;
     private Animator animator;
-    private Vector2 movement;
+    private AudioSource _audioSource;
+
+    // Input keys
     public KeyCode attackKey = KeyCode.Space;
     public KeyCode jumpKey = KeyCode.W;
     public KeyCode blockKey = KeyCode.LeftControl;
+    public KeyCode transformKey = KeyCode.T;
+    public KeyCode jumpAttackKey = KeyCode.Space;
+    public KeyCode airDashKey = KeyCode.LeftShift;
+    public KeyCode dashKey = KeyCode.LeftShift;
+
+    // State flags
     private bool isDead = false;
+    private bool isAttacking = false;
+    private bool isCharging = false;
+    private bool readyToAttack = false;
+    private bool isJumpAttacking = false;
+    private bool isAirDashing = false;
+    private bool hasAirDashed = false;
+    private bool isDashing = false;
+    private bool isKnockbacked = false;
+    private bool isBlocking = false;
+    private bool isTransformed = false;
+    private bool isGrounded = false;
+    private bool wasRunning = false;
+
+    // Combo
     private int comboStep = 0;
     private float lastClickTime = 0f;
     private float comboMaxDelay = 0.4f;
-    private bool isGrounded = false;
-    private bool wasRunning = false; // 👈 novo: pra saber se estava correndo antes
-    public KeyCode chargeKey = KeyCode.C; // ou use o mesmo botão de ataque
-    private bool isCharging = false;
-    private float chargeStartTime = 0f;
-    public float maxChargeTime = 0.5f; // tempo máximo para carga total
-    private bool readyToAttack = false;
-    public KeyCode jumpAttackKey = KeyCode.Space;
-    private bool isJumpAttacking = false;
+
+    // Jump attack combo
+    private float lastJumpAttackTime = 0f;
     private int jumpComboStep = 0;
     private float jumpComboMaxDelay = 0.4f;
-    private float lastJumpAttackTime = 0f;
 
-    // Airdash
+    // Dash parameters
     public float airDashSpeed = 10f;
     public float airDashDuration = 0.2f;
-    public KeyCode airDashKey = KeyCode.LeftShift;
-
-    private bool isAirDashing = false;
-    private bool hasAirDashed = false;
     private float airDashTimer = 0f;
-
-    // Dash terrestre
     public float dashSpeed = 12f;
     public float dashDuration = 0.2f;
-    public KeyCode dashKey = KeyCode.LeftShift;
-
-    private bool isDashing = false;
     private float dashTimer = 0f;
 
     // Knockback
-    public float knockbackForce = 5f;
+    public float knockbackForce = 10f;
     public float knockbackDuration = 0.3f;
-    private bool isKnockbacked = false;
 
-    // health bar
+    // Attack
+    public KeyCode chargeKey = KeyCode.C;
+    public float maxChargeTime = 0.5f;
+    private float chargeStartTime = 0f;
+    private bool _charge = false;
+    private int _chargeAttack = 20;
+    private BoxCollider2D _hitbox;
+    [Tooltip("Tamanho da hitbox no estado normal")]
+    public Vector2 normalHitboxSize = new Vector2(2.5f, 1f);
+    [Tooltip("Tamanho da hitbox quando transformado")]
+    public Vector2 transformedHitboxSize = new Vector2(5f, 1.2f);
+
+
+    // Transformation
+    [Tooltip("Animator Controller da forma normal")]
+    public RuntimeAnimatorController normalController;
+    [Tooltip("Animator Controller da forma transformada")]
+    public RuntimeAnimatorController transformedController;
+    [Tooltip("Som de transformação")]
+    public AudioClip transformSound;
+    [Tooltip("Prefab do VFX de transformação")]
+    public GameObject transformVFXPrefab;
+    [Tooltip("Duração do VFX de transformação")]
+    public float transformVFXDuration = 1f;
+
+    // Internal
+    private Vector2 movement;
 
     void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
-        animator = GetComponent<Animator>();
-        _vida = vidaMaxima;
-        AtualizarHUD();
+        rb          = GetComponent<Rigidbody2D>();
+        animator    = GetComponent<Animator>();
+        _audioSource= GetComponent<AudioSource>();
+        _hitbox     = GetComponent<BoxCollider2D>();
+        _hitbox.enabled = false;              // desligada por padrão
+        if (normalController != null)
+            animator.runtimeAnimatorController = normalController;
     }
 
     void Update()
     {
-        if (isDead) return;
-        if (isKnockbacked) return;
+        if (isDead || isKnockbacked) return;
+
+        // Toggle transformação
+        if (Input.GetKeyDown(transformKey))
+            ToggleTransformation();
 
         UpdateGroundDetection();
         UpdateMovementInput();
@@ -82,12 +123,16 @@ public class PlayerMovement : MonoBehaviour
         UpdateStopTrigger();
 
         UpdateAttackCombo();
-        UpdateChargeAttack();
-        UpdateJumpAttack();
-        UpdateJump();
+        // Apenas se não transformado, habilita pulo, ataque normal e dash
+        if (!isTransformed)
+        {
+            UpdateChargeAttack();
+            UpdateJumpAttack();
+            UpdateJump();
+            UpdateAirDash();
+            UpdateDash();
+        }
         UpdateBlock();
-        UpdateAirDash();
-        UpdateDash();
     }
     void FixedUpdate()
     {
@@ -101,9 +146,29 @@ public class PlayerMovement : MonoBehaviour
             float dashDirection = transform.localScale.x > 0 ? 1f : -1f;
             rb.linearVelocity = new Vector2(dashDirection * dashSpeed, rb.linearVelocity.y);
         }
+        else if (isKnockbacked)
+        {
+            return;
+        }
         else
         {
             rb.linearVelocity = new Vector2(movement.x * moveSpeed, rb.linearVelocity.y);
+        }
+    }
+
+    // Lógica de transformação
+    private void ToggleTransformation()
+    {
+        isTransformed = !isTransformed;
+        animator.runtimeAnimatorController = isTransformed && transformedController != null
+            ? transformedController
+            : normalController;
+        if (transformSound != null)
+            _audioSource.PlayOneShot(transformSound);
+        if (transformVFXPrefab != null)
+        {
+            var vfx = Instantiate(transformVFXPrefab, transform.position, Quaternion.identity);
+            Destroy(vfx, transformVFXDuration);
         }
     }
     void UpdateGroundDetection()
@@ -111,36 +176,34 @@ public class PlayerMovement : MonoBehaviour
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
         animator.SetBool("IsGrounded", isGrounded);
         if (isGrounded)
-        {
             hasAirDashed = false;
-        }
     }
     void UpdateMovementInput()
     {
         float inputX = Input.GetAxisRaw("Horizontal");
         movement.x = inputX;
+        if (isAttacking || isCharging)
+            movement.x = 0;
     }
+
     void UpdateFacingDirection()
     {
         if (Mathf.Abs(movement.x) > 0.01f)
-        {
             transform.localScale = new Vector3(Mathf.Sign(movement.x), 1, 1);
-        }
     }
+
     void UpdateAnimationParameters()
     {
         animator.SetFloat("Speed", Mathf.Abs(rb.linearVelocity.x));
+        if (isAttacking)
+            animator.SetFloat("Speed", 0);
     }
     void UpdateStopTrigger()
     {
         bool isRunning = Mathf.Abs(rb.linearVelocity.x) > 0.1f;
         bool isTryingToMove = Mathf.Abs(movement.x) > 0.1f;
-
         if (wasRunning && !isRunning && !isTryingToMove && isGrounded)
-        {
             animator.SetTrigger("Stop");
-        }
-
         wasRunning = isRunning;
     }
     void UpdateAttackCombo()
@@ -151,17 +214,20 @@ public class PlayerMovement : MonoBehaviour
         {
             comboStep = 0;
             animator.SetInteger("ComboStep", 0);
+            isAttacking = false;
         }
 
         if (isGrounded && Input.GetKeyDown(attackKey))
         {
+            isAttacking = true;
+            _audioSource.Play(); // Toca o som do ataque
             lastClickTime = Time.time;
             HandleCombo();
         }
     }
     void UpdateChargeAttack()
     {
-        if (Input.GetKeyDown(chargeKey))
+        if (Input.GetKeyDown(chargeKey) && movement.x == 0)
         {
             isCharging = true;
             chargeStartTime = Time.time;
@@ -176,6 +242,7 @@ public class PlayerMovement : MonoBehaviour
             float chargeDuration = Time.time - chargeStartTime;
             if (chargeDuration >= maxChargeTime)
             {
+                _audioSource.Play(); // Toca o som do ataque
                 readyToAttack = true;
                 animator.SetBool("ReadyToAttack", true);
                 animator.SetTrigger("ChargedAttack");
@@ -186,6 +253,7 @@ public class PlayerMovement : MonoBehaviour
     {
         if (!isGrounded && Input.GetKeyDown(jumpAttackKey))
         {
+            _audioSource.Play(); // Toca o som do ataque
             float timeSinceLast = Time.time - lastJumpAttackTime;
 
             if (timeSinceLast > jumpComboMaxDelay)
@@ -203,10 +271,7 @@ public class PlayerMovement : MonoBehaviour
 
             animator.SetBool("IsJumpAttacking", true);
             animator.SetInteger("JumpComboStep", jumpComboStep);
-
-            Debug.Log("JumpComboStep: " + jumpComboStep);
-
-            animator.SetTrigger("JumpAttack"); // 🟢 volta o trigger aqui
+            animator.SetTrigger("JumpAttack");
 
         }
     }
@@ -224,13 +289,16 @@ public class PlayerMovement : MonoBehaviour
     }
     void UpdateBlock()
     {
+        // atualiza flag de bloqueio
         if (Input.GetKey(blockKey))
         {
+            isBlocking = true;
             animator.SetBool("Block", true);
             movement.x = 0;
         }
         else
         {
+            isBlocking = false;
             animator.SetBool("Block", false);
         }
     }
@@ -281,16 +349,27 @@ public class PlayerMovement : MonoBehaviour
         isDead = true;
         animator.SetBool("IsDead", true);
         rb.linearVelocity = Vector2.zero;
+       // dispara o evento passando this
+        OnPlayerDeath?.Invoke(this);
     }
 
     void HandleCombo()
     {
-        if (comboStep == 0) animator.SetTrigger("Attack");
+        // dispara o trigger de ataque só no primeiro golpe
+        if (comboStep == 0)
+            animator.SetTrigger("Attack");
 
         comboStep++;
-        if (comboStep > 3) comboStep = 0;
 
-        Debug.Log("ComboStep: " + comboStep);
+        // define o número máximo de golpes segundo a forma
+        int maxCombo = isTransformed ? 2 : 3;
+
+        if (comboStep > maxCombo)
+        {
+            comboStep    = 0;
+            isAttacking  = false;
+        }
+
         animator.SetInteger("ComboStep", comboStep);
     }
 
@@ -298,6 +377,7 @@ public class PlayerMovement : MonoBehaviour
     {
         comboStep = 0;
         animator.SetInteger("ComboStep", 0);
+        // isAttacking = false;
     }
 
     void OnDrawGizmosSelected()
@@ -313,6 +393,8 @@ public class PlayerMovement : MonoBehaviour
     {
         readyToAttack = false;
         animator.SetBool("ReadyToAttack", false);
+        this.FinalizaAtaque();
+        _charge = false;
     }
     public void EndJumpAttack()
     {
@@ -322,20 +404,31 @@ public class PlayerMovement : MonoBehaviour
         animator.SetInteger("JumpComboStep", 0);
     }
 
-    public void TakeDamage(Vector2 damageSourcePosition)
-    {   
-        _vida -= damage;
-        AtualizarHUD();
+    public void TakeDamage(Vector2 damageSourcePosition, int damage)
+    {
         if (isKnockbacked || isDead) return;
+
+        // se estiver bloqueando, executa animação de bloqueio com feedback e não aplica dano
+        if (isBlocking)
+        {
+            animator.SetTrigger("BlockHit"); // animação de bloqueio especial
+            return;
+        }
 
         isKnockbacked = true;
         animator.SetBool("IsHurt", true);
-
-        // calcula direção do knockback (empurra do lado contrário do dano)
+        // calcula direção do knockback
         float direction = transform.position.x > damageSourcePosition.x ? 1f : -1f;
-        rb.linearVelocity = new Vector2(direction * knockbackForce, rb.linearVelocity.y + 2f); // também joga pra cima levemente
+        rb.linearVelocity = new Vector2(direction * knockbackForce, rb.linearVelocity.y + 2f);
 
-        // desabilita controle por tempo curto
+        // aplica dano
+        damage -= _defesa;
+        _vida -= damage;
+        if (_vida <= 0)
+        {
+            Die();
+        }
+
         StartCoroutine(EndKnockbackAfterDelay());
     }
     IEnumerator EndKnockbackAfterDelay()
@@ -346,11 +439,40 @@ public class PlayerMovement : MonoBehaviour
         isKnockbacked = false;
     }
 
-    // hud
-    private void AtualizarHUD()
+    void OnTriggerEnter2D(Collider2D other)
     {
-        if (barraDeVida != null)
-            barraDeVida.value = (float)_vida / vidaMaxima;
+        // // Se não estivermos com o hitbox de ataque ligado, sai
+        if (_hitbox == null || !_hitbox.enabled) return;
+        
+        if (other.CompareTag("Enemy"))
+        {
+            var enemy = other.GetComponent<Enemy>();
+            if (enemy != null)
+            {
+                enemy.TakeDamage(transform.position, _charge ? _chargeAttack : _ataque);
+            }
+        }
+    }
+
+    public void IniciaAtaque()
+    {
+        // ajusta o tamanho conforme a forma
+        _hitbox.size = isTransformed 
+            ? transformedHitboxSize 
+            : normalHitboxSize;
+
+        _hitbox.enabled = true;
+    }
+
+    public void FinalizaAtaque()
+    {
+        _hitbox.enabled = false;
+    }
+
+    public void iniciaChargeAttack()
+    {
+        this.IniciaAtaque();
+        _charge = true;
     }
 
 }
