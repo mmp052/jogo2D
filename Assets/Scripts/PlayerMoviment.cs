@@ -1,8 +1,14 @@
 using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
 public class PlayerMovement : MonoBehaviour
 {
+    // health bar
+    [SerializeField] private Slider BarraDeVida;  
+    [SerializeField] private int vidaMaxima = 100; 
+    private int _vida;
+
     public float moveSpeed = 4f;
     public float jumpForce = 10f;
     public Transform groundCheck;
@@ -53,10 +59,15 @@ public class PlayerMovement : MonoBehaviour
     public float knockbackForce = 5f;
     public float knockbackDuration = 0.3f;
     private bool isKnockbacked = false;
+
+    // health bar
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         animator = GetComponent<Animator>();
+        _vida = vidaMaxima;
+        AtualizarHUD();
     }
 
     void Update()
@@ -312,7 +323,9 @@ public class PlayerMovement : MonoBehaviour
     }
 
     public void TakeDamage(Vector2 damageSourcePosition)
-    {
+    {   
+        _vida -= damage;
+        AtualizarHUD();
         if (isKnockbacked || isDead) return;
 
         isKnockbacked = true;
@@ -331,6 +344,13 @@ public class PlayerMovement : MonoBehaviour
 
         animator.SetBool("IsHurt", false);
         isKnockbacked = false;
+    }
+
+    // hud
+    private void AtualizarHUD()
+    {
+        if (barraDeVida != null)
+            barraDeVida.value = (float)_vida / vidaMaxima;
     }
 
 }
