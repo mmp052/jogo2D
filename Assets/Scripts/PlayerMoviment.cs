@@ -22,6 +22,10 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody2D rb;
     private Animator animator;
     private AudioSource _audioSource;
+    [SerializeField]
+    private AudioSource passosAudioSource;
+    [SerializeField]
+    private AudioClip[] passosAudioClips;
 
     // Input keys
     public KeyCode attackKey = KeyCode.Space;
@@ -450,13 +454,13 @@ public class PlayerMovement : MonoBehaviour
 
         if (other.CompareTag("Enemy"))
         {
-            if (other.isTrigger) 
-            return;
+            if (other.isTrigger)
+                return;
 
             var enemy = other.GetComponent<Enemy>();
             if (enemy != null)
             {
-                if(isTransformed)
+                if (isTransformed)
                     enemy.TakeDamage(transform.position, _ataque * 4);
                 else
                     enemy.TakeDamage(transform.position, _charge ? _chargeAttack : _ataque);
@@ -491,7 +495,7 @@ public class PlayerMovement : MonoBehaviour
         canTransform = true;
         // (opcional) feedback visual, som, UI, etc.
     }
-    
+
     // reseta estado e move o player para a posição do checkpoint
     public void RespawnAt(Vector3 pos)
     {
@@ -510,6 +514,11 @@ public class PlayerMovement : MonoBehaviour
 
         // opcional: reset combo, anim state, etc.
         ResetCombo();
+    }
+
+    public void Passos()
+    {
+        passosAudioSource.PlayOneShot(passosAudioClips[UnityEngine.Random.Range(0, passosAudioClips.Length)]);
     }
 
 }
