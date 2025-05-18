@@ -30,11 +30,6 @@ public class StatePatrulha: State
         // quando inicializado o jogo
         // transform.position = waypoints[0].position + transform.lossyScale;
 
-<<<<<<< HEAD
-        nextWaypoint = 1;
-
-        
-=======
         nextWaypoint = 0;
 
         // criação explícita da transição de dano:
@@ -47,22 +42,10 @@ public class StatePatrulha: State
         toMorte.condition = new ConditionDeath(me);
         toMorte.target    = GetComponent<StateMorte>();
         transitions.Add(toMorte);
->>>>>>> 07ec0b5fcdb43dd9f2f3417bf5dd1e1c2f8c276a
     }
 
     public override void Update()
     {
-<<<<<<< HEAD
-        if (normalizedDirection() > 0)
-        {
-            speed = 2.0f;
-            transform.localScale = new Vector3(1, 1, 1); // Inverte o sprite para a direita
-        }
-        else
-        {
-            speed = -2.0f;
-            transform.localScale = new Vector3(-1, 1, 1); // Inverte o sprite para a esquerda
-=======
         float speed = me.VelocidadePatrulha;
         int dir = normalizedDirection();
         rb.linearVelocity = new Vector2(speed * dir, rb.linearVelocity.y);
@@ -78,7 +61,6 @@ public class StatePatrulha: State
         {
             speed = speed * -1.0f;
             // transform.localScale = new Vector3(-1, 1, 1); // Inverte o sprite para a esquerda
->>>>>>> 07ec0b5fcdb43dd9f2f3417bf5dd1e1c2f8c276a
         }
 
         if (Vector2.Distance(transform.position, waypoints[nextWaypoint].position) < _distanceToPoint)
@@ -87,23 +69,13 @@ public class StatePatrulha: State
             if (nextWaypoint >= waypoints.Length) nextWaypoint = 0;
         }
 
-<<<<<<< HEAD
-        rb.linearVelocity = new Vector3(speed, 0);
-
-        _animator.SetFloat("Speed", Mathf.Abs(speed)); // Atualiza a animação de corrida com base na velocidade do Rigidbody2D
-=======
         // rb.linearVelocity = new Vector3(speed, 0);
 
         // _animator.SetFloat("Speed", Mathf.Abs(speed)); // Atualiza a animação de corrida com base na velocidade do Rigidbody2D
->>>>>>> 07ec0b5fcdb43dd9f2f3417bf5dd1e1c2f8c276a
 
 
     }
 
-<<<<<<< HEAD
-    int normalizedDirection() {
-        // Debug.Log(waypoints[nextWaypoint].position.x + " - " + transform.position.x + " = " + direction);
-=======
     public override void LateUpdate()
     {
         foreach (Transition t in transitions)
@@ -121,7 +93,6 @@ public class StatePatrulha: State
     }
 
     int normalizedDirection() {
->>>>>>> 07ec0b5fcdb43dd9f2f3417bf5dd1e1c2f8c276a
         if (Mathf.Abs(_direction) > 0.2)
         {
             _direction = waypoints[nextWaypoint].position.x - transform.position.x;

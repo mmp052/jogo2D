@@ -1,12 +1,5 @@
 using UnityEngine;
 using FSM;
-<<<<<<< HEAD
-
-public class StateAtaque : State
-{
-    private Animator _animator;
-    private BoxCollider2D _hitbox;
-=======
 using System.Collections;
 
 public class StateAtaque : State
@@ -17,34 +10,10 @@ public class StateAtaque : State
     [SerializeField]
     private GameObject    _player;
     private AudioSource   _audioSource;
->>>>>>> 07ec0b5fcdb43dd9f2f3417bf5dd1e1c2f8c276a
 
     public override void Awake()
     {
         base.Awake();
-<<<<<<< HEAD
-        Transition ToPatrulha = new Transition();
-        ToPatrulha.condition = new Condition();
-        ToPatrulha.target = GetComponent<StateAtaque>();
-
-    }
-    public override void OnEnable()
-    {
-        base.OnEnable();
-        _animator = GetComponent<Animator>();
-        _hitbox = GetComponents<BoxCollider2D>()[1];
-
-        _hitbox.enabled = true;
-        _animator.SetTrigger("Attack");
-    }
-
-    public override void OnDisable()
-    {
-        base.OnDisable();
-        _hitbox.enabled = false;
-    }
-}
-=======
         _animator = GetComponent<Animator>();
         _audioSource = GetComponent<AudioSource>();
         me = GetComponent<Enemy>();   // ② atribua aqui
@@ -113,4 +82,3 @@ public class StateAtaque : State
         }
     }
 }
->>>>>>> 07ec0b5fcdb43dd9f2f3417bf5dd1e1c2f8c276a

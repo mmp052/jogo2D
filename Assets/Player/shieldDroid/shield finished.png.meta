@@ -435,7 +435,19 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      shield finished_0: 4524929504159654399
+      shield finished_1: 9095601875304532796
+      shield finished_10: -3058474629510147905
+      shield finished_11: -8157761365156131681
+      shield finished_2: 8614843650480659659
+      shield finished_3: 1318426349451011210
+      shield finished_4: -4374719211765075035
+      shield finished_5: -9220114594349656218
+      shield finished_6: 3863009490938290988
+      shield finished_7: -5402257189250861089
+      shield finished_8: 1948365543657400317
+      shield finished_9: 6250340507548325726
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
