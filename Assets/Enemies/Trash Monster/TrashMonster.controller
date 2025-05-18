@@ -30,11 +30,8 @@ AnimatorStateMachine:
   m_ChildStateMachines: []
   m_AnyStateTransitions:
   - {fileID: 1216516654231109148}
-<<<<<<< HEAD
-=======
   - {fileID: -1075804605552872717}
   - {fileID: -2064441227828786687}
->>>>>>> 07ec0b5fcdb43dd9f2f3417bf5dd1e1c2f8c276a
   m_EntryTransitions: []
   m_StateMachineTransitions: {}
   m_StateMachineBehaviours: []
@@ -217,8 +214,6 @@ AnimatorController:
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 9100000}
-<<<<<<< HEAD
-=======
   - m_Name: Hit
     m_Type: 9
     m_DefaultFloat: 0
@@ -231,7 +226,6 @@ AnimatorController:
     m_DefaultInt: 0
     m_DefaultBool: 0
     m_Controller: {fileID: 9100000}
->>>>>>> 07ec0b5fcdb43dd9f2f3417bf5dd1e1c2f8c276a
   m_AnimatorLayers:
   - serializedVersion: 5
     m_Name: Base Layer
