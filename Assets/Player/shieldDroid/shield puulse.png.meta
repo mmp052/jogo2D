@@ -435,7 +435,19 @@ TextureImporter:
     secondaryTextures: []
     spriteCustomMetadata:
       entries: []
-    nameFileIdTable: {}
+    nameFileIdTable:
+      shield puulse_0: -8056838061788785865
+      shield puulse_1: -5973186405709341786
+      shield puulse_10: 7793944698827782140
+      shield puulse_11: 4192750979897900560
+      shield puulse_2: 7199472887909164104
+      shield puulse_3: 4599613776705118496
+      shield puulse_4: 2530386857319389523
+      shield puulse_5: 8267935955889701220
+      shield puulse_6: 915692748965253337
+      shield puulse_7: -3952781081211420761
+      shield puulse_8: -9032040912122619595
+      shield puulse_9: 5628004073590656676
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
