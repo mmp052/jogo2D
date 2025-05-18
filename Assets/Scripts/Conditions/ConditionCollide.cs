@@ -1,20 +1,21 @@
 using UnityEngine;
+using FSM;  // opcional, mas mantém a consistência
 
 namespace FSM
 {
-    public class ConditionCollide: Condition
+    public class ConditionCollide : Condition
     {
-        Enemy agent;
+        private Enemy agent;
 
-        public ConditionCollide(Enemy ag) 
+        public ConditionCollide(Enemy ag)
         {
             agent = ag;
         }
 
         public override bool Test()
         {
-            return agent.flagEnterAttack;
+            // usa o nome da propriedade tal como está em Enemy.cs
+            return agent.FlagEnterAttack;
         }
-
     }
 }
