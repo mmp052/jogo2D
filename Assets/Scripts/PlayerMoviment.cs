@@ -122,19 +122,19 @@ public class PlayerMovement : MonoBehaviour
         UpdateMovementInput();
         UpdateFacingDirection();
         UpdateAnimationParameters();
-        UpdateStopTrigger();
 
         UpdateAttackCombo();
         // Apenas se não transformado, habilita pulo, ataque normal e dash
         if (!isTransformed)
         {
+            UpdateStopTrigger();
             UpdateChargeAttack();
             UpdateJumpAttack();
             UpdateJump();
             UpdateAirDash();
             UpdateDash();
+            UpdateBlock();
         }
-        UpdateBlock();
     }
     void FixedUpdate()
     {
@@ -222,7 +222,6 @@ public class PlayerMovement : MonoBehaviour
         if (isGrounded && Input.GetKeyDown(attackKey))
         {
             isAttacking = true;
-            _audioSource.Play(); // Toca o som do ataque
             lastClickTime = Time.time;
             HandleCombo();
         }
@@ -424,7 +423,10 @@ public class PlayerMovement : MonoBehaviour
         rb.linearVelocity = new Vector2(direction * knockbackForce, rb.linearVelocity.y + 2f);
 
         // aplica dano
-        damage -= _defesa;
+        if (isTransformed)
+            damage -= _defesa * 10; // reduz defesa pela metade se transformado
+        else
+            damage -= _defesa;
         _vida -= damage;
         if (_vida <= 0)
         {
@@ -454,13 +456,17 @@ public class PlayerMovement : MonoBehaviour
             var enemy = other.GetComponent<Enemy>();
             if (enemy != null)
             {
-                enemy.TakeDamage(transform.position, _charge ? _chargeAttack : _ataque);
+                if(isTransformed)
+                    enemy.TakeDamage(transform.position, _ataque * 4);
+                else
+                    enemy.TakeDamage(transform.position, _charge ? _chargeAttack : _ataque);
             }
         }
     }
 
     public void IniciaAtaque()
     {
+        _audioSource.Play(); // Toca o som do ataque
         // ajusta o tamanho conforme a forma
         _hitbox.size = isTransformed
             ? transformedHitboxSize
