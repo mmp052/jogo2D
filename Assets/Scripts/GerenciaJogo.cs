@@ -1,15 +1,25 @@
-// GerenciaJogo.cs
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
 
 public class GerenciaJogo : MonoBehaviour
 {
+    public static GerenciaJogo Instance { get; private set; }
+
     [Tooltip("Nomes EXATOS dos clips de morte para cada personagem")]
     public string[] deathAnimationStates;
-
     [Tooltip("Fallback de delay (s) caso o death clip não seja encontrado")]
     public float defaultDeathDelay = 1f;
+
+    // **novo**: última posição de respawn
+    private Vector3 _checkpointPosition;
+
+    void Awake()
+    {
+        // singleton    
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+    }
 
     void OnEnable()
     {
@@ -21,11 +31,17 @@ public class GerenciaJogo : MonoBehaviour
         PlayerMovement.OnPlayerDeath -= HandlePlayerDeath;
     }
 
-    void Update()
+    // exposto para o Checkpoint chamar
+    public void SetCheckpoint(Vector3 pos)
     {
-        // reload manual com R
-        if (Input.GetKeyDown(KeyCode.R))
-            ReloadScene();
+        _checkpointPosition = pos;
+        // opcional: feedback visual ou de som
+    }
+
+    // chamado pela extremidade (queda)
+    public void HandlePlayerFall()
+    {
+        RespawnPlayer();
     }
 
     private void HandlePlayerDeath(PlayerMovement deadPlayer)
@@ -36,47 +52,40 @@ public class GerenciaJogo : MonoBehaviour
 
     private IEnumerator RestartAfterDeath(Animator anim)
     {
-        // 1) espera um frame para garantir que a transição pro estado de morte já aconteceu
-        yield return null;
-
-        // 2) pega info e clips atuais
+        yield return null; // espera frame
         var stateInfo = anim.GetCurrentAnimatorStateInfo(0);
-        var currentClips = anim.GetCurrentAnimatorClipInfo(0);
 
-        // 3) tenta achar o clip de morte (por nome) na lista do controller
+        // busca clip de morte
         AnimationClip deathClip = null;
         foreach (var clip in anim.runtimeAnimatorController.animationClips)
         {
             foreach (var deathState in deathAnimationStates)
-            {
                 if (clip.name == deathState)
                 {
                     deathClip = clip;
                     break;
                 }
-            }
             if (deathClip != null) break;
         }
 
-        // 4) calcula tempo a esperar
+        // calcula delay
         float waitTime = defaultDeathDelay;
         if (deathClip != null && stateInfo.IsName(deathClip.name))
         {
-            // tempo restante = comprimento total * (1 - normalizedTime)
             waitTime = deathClip.length * (1f - stateInfo.normalizedTime);
-            if (waitTime < 0) 
-                waitTime = 0f;
+            waitTime = Mathf.Max(0f, waitTime);
         }
-
-        // 5) espera esse tempo
         yield return new WaitForSeconds(waitTime);
 
-        // 6) reinicia a cena
-        ReloadScene();
+        // **em vez de recarregar**, reposiciona o jogador
+        RespawnPlayer();
     }
 
-    private void ReloadScene()
+    private void RespawnPlayer()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        // encontra o jogador na cena
+        var player = FindObjectOfType<PlayerMovement>();
+        if (player != null)
+            player.RespawnAt(_checkpointPosition);
     }
 }

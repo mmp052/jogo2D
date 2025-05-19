@@ -18,6 +18,9 @@ EditorBuildSettings:
     path: Assets/Scenes/Historia 2.unity
     guid: 9d2a2d56956b4f1459970f8c5cf23176
   - enabled: 1
+    path: Assets/Scenes/teste.unity
+    guid: c997d7b08069cfc44b58e5c1e37ab171
+  - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 8c9cfa26abfee488c85f1582747f6a02
   - enabled: 1

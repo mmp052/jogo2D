@@ -2,12 +2,17 @@ using UnityEngine;
 
 public class Extremidade : MonoBehaviour
 {
-    private void OnTriggerEnter2D(Collider2D collision)
+    private void OnTriggerExit2D(Collider2D collision)
     {
-        if (collision.CompareTag("Player"))
-        {
-            // Se o jogador colidir com a extremidade, reinicie a cena
-            // UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
-        }
+        // 1) Só o Player
+        if (!collision.CompareTag("Player")) 
+            return;
+
+        // 2) Ignora colliders que são 'trigger' (o seu hitbox)
+        if (collision.isTrigger) 
+            return;
+
+        // 3) Aqui sim: o corpo do player saiu, respawna
+        GerenciaJogo.Instance.HandlePlayerFall();
     }
 }

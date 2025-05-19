@@ -6,9 +6,11 @@ public class Coletavel : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            // Aqui você pode adicionar pontos, efeitos, etc.
+            var pm = other.GetComponent<PlayerMovement>();
+            if (pm != null)
+                pm.EnableTransformation();
 
-            // Destrói o coletável
+            // destrói o coletável
             Destroy(gameObject);
         }
     }
