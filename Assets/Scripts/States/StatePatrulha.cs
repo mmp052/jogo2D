@@ -29,7 +29,6 @@ public class StatePatrulha: State
         // Garanto que o player estará no primeiro waypoint
         // quando inicializado o jogo
         // transform.position = waypoints[0].position + transform.lossyScale;
-
         nextWaypoint = 0;
 
         // criação explícita da transição de dano:

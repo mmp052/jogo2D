@@ -22,6 +22,10 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody2D rb;
     private Animator animator;
     private AudioSource _audioSource;
+    [SerializeField]
+    private AudioSource passosAudioSource;
+    [SerializeField]
+    private AudioClip[] passosAudioClips;
 
     // Input keys
     public KeyCode attackKey = KeyCode.Space;
@@ -83,6 +87,8 @@ public class PlayerMovement : MonoBehaviour
 
 
     // Transformation
+    [SerializeField]
+    private bool canTransform = false;
     [Tooltip("Animator Controller da forma normal")]
     public RuntimeAnimatorController normalController;
     [Tooltip("Animator Controller da forma transformada")]
@@ -99,10 +105,10 @@ public class PlayerMovement : MonoBehaviour
 
     void Start()
     {
-        rb          = GetComponent<Rigidbody2D>();
-        animator    = GetComponent<Animator>();
-        _audioSource= GetComponent<AudioSource>();
-        _hitbox     = GetComponent<BoxCollider2D>();
+        rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
+        _audioSource = GetComponent<AudioSource>();
+        _hitbox = GetComponent<BoxCollider2D>();
         _hitbox.enabled = false;              // desligada por padrão
         if (normalController != null)
             animator.runtimeAnimatorController = normalController;
@@ -112,27 +118,27 @@ public class PlayerMovement : MonoBehaviour
     {
         if (isDead || isKnockbacked) return;
 
-        // Toggle transformação
-        if (Input.GetKeyDown(transformKey))
+        // só dispara transformação se tiver coletado
+        if (canTransform && Input.GetKeyDown(transformKey))
             ToggleTransformation();
 
         UpdateGroundDetection();
         UpdateMovementInput();
         UpdateFacingDirection();
         UpdateAnimationParameters();
-        UpdateStopTrigger();
 
         UpdateAttackCombo();
         // Apenas se não transformado, habilita pulo, ataque normal e dash
         if (!isTransformed)
         {
+            UpdateStopTrigger();
             UpdateChargeAttack();
             UpdateJumpAttack();
             UpdateJump();
             UpdateAirDash();
             UpdateDash();
+            UpdateBlock();
         }
-        UpdateBlock();
     }
     void FixedUpdate()
     {
@@ -182,7 +188,7 @@ public class PlayerMovement : MonoBehaviour
     {
         float inputX = Input.GetAxisRaw("Horizontal");
         movement.x = inputX;
-        if (isAttacking || isCharging)
+        if (isAttacking || isCharging || Input.GetKeyUp(KeyCode.A) || Input.GetKeyUp(KeyCode.D))
             movement.x = 0;
     }
 
@@ -220,7 +226,6 @@ public class PlayerMovement : MonoBehaviour
         if (isGrounded && Input.GetKeyDown(attackKey))
         {
             isAttacking = true;
-            _audioSource.Play(); // Toca o som do ataque
             lastClickTime = Time.time;
             HandleCombo();
         }
@@ -349,7 +354,7 @@ public class PlayerMovement : MonoBehaviour
         isDead = true;
         animator.SetBool("IsDead", true);
         rb.linearVelocity = Vector2.zero;
-       // dispara o evento passando this
+        // dispara o evento passando this
         OnPlayerDeath?.Invoke(this);
     }
 
@@ -366,8 +371,8 @@ public class PlayerMovement : MonoBehaviour
 
         if (comboStep > maxCombo)
         {
-            comboStep    = 0;
-            isAttacking  = false;
+            comboStep = 0;
+            isAttacking = false;
         }
 
         animator.SetInteger("ComboStep", comboStep);
@@ -422,7 +427,10 @@ public class PlayerMovement : MonoBehaviour
         rb.linearVelocity = new Vector2(direction * knockbackForce, rb.linearVelocity.y + 2f);
 
         // aplica dano
-        damage -= _defesa;
+        if (isTransformed)
+            damage -= _defesa * 10; // reduz defesa pela metade se transformado
+        else
+            damage -= _defesa;
         _vida -= damage;
         if (_vida <= 0)
         {
@@ -443,22 +451,29 @@ public class PlayerMovement : MonoBehaviour
     {
         // // Se não estivermos com o hitbox de ataque ligado, sai
         if (_hitbox == null || !_hitbox.enabled) return;
-        
+
         if (other.CompareTag("Enemy"))
         {
+            if (other.isTrigger)
+                return;
+
             var enemy = other.GetComponent<Enemy>();
             if (enemy != null)
             {
-                enemy.TakeDamage(transform.position, _charge ? _chargeAttack : _ataque);
+                if (isTransformed)
+                    enemy.TakeDamage(transform.position, _ataque * 4);
+                else
+                    enemy.TakeDamage(transform.position, _charge ? _chargeAttack : _ataque);
             }
         }
     }
 
     public void IniciaAtaque()
     {
+        _audioSource.Play(); // Toca o som do ataque
         // ajusta o tamanho conforme a forma
-        _hitbox.size = isTransformed 
-            ? transformedHitboxSize 
+        _hitbox.size = isTransformed
+            ? transformedHitboxSize
             : normalHitboxSize;
 
         _hitbox.enabled = true;
@@ -473,6 +488,37 @@ public class PlayerMovement : MonoBehaviour
     {
         this.IniciaAtaque();
         _charge = true;
+    }
+
+    public void EnableTransformation()
+    {
+        canTransform = true;
+        // (opcional) feedback visual, som, UI, etc.
+    }
+
+    // reseta estado e move o player para a posição do checkpoint
+    public void RespawnAt(Vector3 pos)
+    {
+        // reposiciona
+        transform.position = pos;
+
+        // reseta físicas
+        var rb = GetComponent<Rigidbody2D>();
+        rb.linearVelocity = Vector2.zero;
+
+        // reseta flags de morte / knockback
+        isDead = false;
+        isKnockbacked = false;
+        animator.SetBool("IsDead", false);
+        animator.SetBool("IsHurt", false);
+
+        // opcional: reset combo, anim state, etc.
+        ResetCombo();
+    }
+
+    public void Passos()
+    {
+        passosAudioSource.PlayOneShot(passosAudioClips[UnityEngine.Random.Range(0, passosAudioClips.Length)]);
     }
 
 }
